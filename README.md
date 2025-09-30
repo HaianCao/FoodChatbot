@@ -17,7 +17,7 @@
 | --------------- | --------------- | ------------- | ------------ |
 | Cao Hải An      | 23001818        | HaianCao      | [Đóng góp 1] |
 | Đặng Thế Anh    | [Mã SV 2]       | [GitHub 2]    | [Đóng góp 2] |
-| Phạm Minh Cương | [Mã SV 3]       | [GitHub 3]    | [Đóng góp 3] |
+| Phạm Minh Cương | 23001840        | mcnb2005      | [Đóng góp 3] |
 | Đỗ Minh Đức     | [Mã SV 3]       | [GitHub 3]    | [Đóng góp 3] |
 | Phạm Nhật Quang | [Mã SV 3]       | [GitHub 3]    | [Đóng góp 3] |
 
@@ -149,4 +149,5 @@
 - [ ] ⬆️ Tải lên báo cáo PDF, slide trình bày và mã nguồn
 - [ ] 🧩 Đảm bảo tất cả mã nguồn được tài liệu hóa đầy đủ với bình luận và docstring
 - [ ] 🔗 Kiểm tra các liên kết và tài liệu tham khảo hoạt động đúng
+
 
