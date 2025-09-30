@@ -14,7 +14,7 @@ Chatbot ẩm thực
 | Đặng Thế Anh    | [Mã SV 2]          | [GitHub 2]       |
 | Phạm Minh Cương | 23001840           | mcnb2005         |
 | Đỗ Minh Đức     | 23001864           | minhhhduc        |
-| Phạm Nhật Quang | [Mã SV 3]          | [GitHub 3]       |
+| Phạm Nhật Quang | 23001920           | NhatquangPham    |
 
 ### 🗒️ Tóm tắt
 
