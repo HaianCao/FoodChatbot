@@ -13,7 +13,7 @@ Chatbot ẩm thực
 | Cao Hải An      | 23001818           | HaianCao         |
 | Đặng Thế Anh    | [Mã SV 2]          | [GitHub 2]       |
 | Phạm Minh Cương | 23001840           | mcnb2005         |
-| Đỗ Minh Đức     | [Mã SV 3]          | [GitHub 3]       |
+| Đỗ Minh Đức     | 23001864           | minhhhduc        |
 | Phạm Nhật Quang | [Mã SV 3]          | [GitHub 3]       |
 
 ### 🗒️ Tóm tắt
