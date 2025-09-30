@@ -11,7 +11,7 @@ Chatbot ẩm thực
 | 👤 Họ và tên 🧑‍🎓 | 🆔 Mã sinh viên 🧾 | 🐙 Tên GitHub 🔗 |
 | --------------- | ------------------ | ---------------- |
 | Cao Hải An      | 23001818           | HaianCao         |
-| Đặng Thế Anh    | [Mã SV 2]          | [GitHub 2]       |
+| Đặng Thế Anh    | 23001821           | DangTAnh         |
 | Phạm Minh Cương | 23001840           | mcnb2005         |
 | Đỗ Minh Đức     | 23001864           | minhhhduc        |
 | Phạm Nhật Quang | 23001920           | NhatquangPham    |
