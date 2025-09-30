@@ -18,7 +18,7 @@
 | Cao Hải An      | 23001818        | HaianCao      | [Đóng góp 1] |
 | Đặng Thế Anh    | [Mã SV 2]       | [GitHub 2]    | [Đóng góp 2] |
 | Phạm Minh Cương | 23001840        | mcnb2005      | [Đóng góp 3] |
-| Đỗ Minh Đức     | [Mã SV 3]       | [GitHub 3]    | [Đóng góp 3] |
+| Đỗ Minh Đức     | 23001864        | minhhhduc     | [Đóng góp 3] |
 | Phạm Nhật Quang | [Mã SV 3]       | [GitHub 3]    | [Đóng góp 3] |
 
 ---
