@@ -86,10 +86,6 @@ You can control the crawler's behavior using environment variables:
   - Example: `export WORKERS=4` (Linux/macOS)
   - Defaults to `3` if not set.
 
-- **`HEADLESS`**: Runs the browser in headless mode (no visible UI). Set to `1` or `true`.
-  - Example: `set HEADLESS=1`
-  - Defaults to `0` (visible browser) if not set.
-
 - **`SKIP_EXISTING_PAGES`**: If set to `true`, the crawler will skip crawling pages for which an output file already exists. This is useful for resuming an interrupted crawl.
   - This is configured as a constant in the scripts themselves.
 
