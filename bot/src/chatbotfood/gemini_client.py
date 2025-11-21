@@ -58,7 +58,7 @@ class GeminiClient:
             Tuple of (translated_text, detected_language)
             detected_language will be 'en' for English, or the detected language code
         """
-        if not text or text.isascii():
+        if not text:
             return text, 'en'
         
         model = model or self.DEFAULT_MODEL
@@ -172,31 +172,6 @@ class GeminiClient:
         except Exception as e:
             print(f"⚠️  Query rewrite failed: {e}. Using original query.")
             return user_query
-
-    def generate_text(self, prompt: str, model: Optional[str] = None) -> str:
-        """Generate text response from a simple prompt.
-        
-        Args:
-            prompt: The text prompt to send to the model
-            model: The Gemini model to use (defaults to DEFAULT_MODEL)
-            
-        Returns:
-            Generated text response
-        """
-        model = model or self.DEFAULT_MODEL
-        contents = [
-            types.Content(
-                role="user",
-                parts=[types.Part.from_text(text=prompt)]
-            )
-        ]
-
-        response = self.client.models.generate_content(
-            model=model,
-            contents=contents,
-            config=self.config
-        )
-        return response.text
     
     def generate_chromadb_filter(self, user_query: str) -> Dict[str, Any]:
         """Generate ChromaDB filter from natural language query.
@@ -308,33 +283,6 @@ class GeminiClient:
         
         return result
 
-    def generate_with_rag_context(
-        self, 
-        user_query: str, 
-        rag_context: Dict[str, Any],
-        model: Optional[str] = None,
-        translate: bool = True
-    ) -> str:
-        """Generate response using RAG (Retrieval-Augmented Generation) context.
-        
-        Combines retrieved recipe information from ChromaDB with the user's question
-        to provide contextually relevant answers.
-        
-        Args:
-            user_query: The user's original question
-            rag_context: Dict with 'context' and 'sources' from ChromaDBManager
-            model: The Gemini model to use (defaults to DEFAULT_MODEL)
-            translate: Whether to translate the query to English first
-            
-        Returns:
-            Generated response incorporating RAG context
-        """
-        model = model or self.DEFAULT_MODEL
-        translated_query = self._prepare_query(user_query, translate, model)
-        context_text = rag_context.get('context', '')
-        prompt_with_context = self._build_rag_prompt(translated_query, context_text)
-        return self._generate_response(prompt_with_context, model)
-
     def generate_with_conversation_and_rag(
         self,
         user_query: str,
@@ -370,35 +318,6 @@ class GeminiClient:
         # Send message through chat session
         response = self.chat_session.send_message(current_prompt)
         
-        return response.text
-    
-    def _prepare_query(self, query: str, translate: bool, model: str) -> str:
-        """Prepare and optionally translate user query."""
-        if translate:
-            translated = self.translate_to_english(query, model)
-            print(f"  📝 Original: {query}")
-            print(f"  🔄 Translated: {translated}\n")
-            return translated
-        return query
-    
-    def _build_rag_prompt(self, query: str, context: str) -> str:
-        """Build prompt with RAG context."""
-        return prompts.get_rag_prompt(query, context)
-    
-    def _generate_response(self, prompt: str, model: str) -> str:
-        """Generate response from a prompt."""
-        contents = [
-            types.Content(
-                role="user",
-                parts=[types.Part.from_text(text=prompt)]
-            )
-        ]
-        
-        response = self.client.models.generate_content(
-            model=model,
-            contents=contents,
-            config=self.config
-        )
         return response.text
     
     def reset_chat_session(self):
