@@ -1,6 +1,6 @@
 # TheRecipeCritic.com Crawler
 
-This project is a robust, multi-stage web crawler designed to scrape recipe data from `therecipecritic.com`. It is built with Python and utilizes Selenium with `undetected-chromedriver` to handle dynamic web content and bypass bot detection.
+This is a robust, multi-stage web crawler designed to scrape recipe data from `therecipecritic.com`. It is built with Python and utilizes Selenium with `undetected-chromedriver` to handle dynamic web content and bypass bot detection.
 
 The crawler is designed for resilience and performance, featuring parallel processing, automatic error recovery, and a modular architecture.
 
@@ -18,7 +18,7 @@ The crawler is designed for resilience and performance, featuring parallel proce
 - **Configurable**: Key parameters like the number of workers, headless mode, and politeness delays can be configured via environment variables or constants.
 - **Data Persistence**: Saves extracted recipe links and detailed recipe information to the `data/` directory. Recipe details are stored as individual JSON files.
 
-## Project Structure
+## Structure
 
 ```
 .
@@ -31,7 +31,7 @@ The crawler is designed for resilience and performance, featuring parallel proce
 ├── crawl_recipe_links_parallel.py  # Stage 2: Crawls categories for recipe links (parallel).
 ├── crawl_recipe_infos_parallel.py  # Stage 3: Crawls recipes for details (parallel).
 │
-├── requirements.txt        # Project dependencies.
+├── requirements.txt        # dependencies.
 ├── data/                   # Output directory for scraped data.
 │   ├── links.txt           # Initial category links.
 │   ├── combined.txt        # All individual recipe links.
