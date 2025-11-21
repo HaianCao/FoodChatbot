@@ -5,11 +5,11 @@ from src.chatbotfood.chatbot import Chatbot
 
 # Get absolute paths
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-STATIC_HOME_DIR = os.path.join(BASE_DIR, 'backend', 'static', 'home')
+STATIC_HOME_DIR = os.path.join(BASE_DIR, 'web', 'static', 'home')
 
 # Set template and static folders
 app = flask.Flask(__name__, 
-                  static_folder='static',
+                  static_folder=os.path.join('web', 'static'),
                   static_url_path='/static')
 app.secret_key = 'your_secret_key'  # Replace with a secure key in production
 chatbot = Chatbot()
