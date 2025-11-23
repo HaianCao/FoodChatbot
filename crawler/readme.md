@@ -71,7 +71,7 @@ python crawl_recipe_links_parallel.py
 
 **Giai đoạn 3: Thu thập Thông tin Công thức (Song song)**
 
-Đây là giai đoạn cuối cùng. Script đọc các URL công thức riêng lẻ từ `data/combined.txt` và thu thập từng cái song song để trích xuất thông tin chi tiết (tóm tắt, nguyên liệu, hướng dẫn, v.v.). Dữ liệu cho mỗi công thức được lưu dưới dạng tệp JSON riêng trong thư mục `data/foods/`.
+Đây là giai đoạn cuối cùng. Script đọc các URL công thức riêng lẻ từ `data/combined.txt` (được tạo ra ở đầu giai đoạn này) và thu thập từng cái song song để trích xuất thông tin chi tiết (tóm tắt, nguyên liệu, hướng dẫn, v.v.). Dữ liệu cho mỗi công thức được lưu dưới dạng tệp JSON riêng trong thư mục `data/foods/`.
 
 ```bash
 python crawl_recipe_infos_parallel.py
