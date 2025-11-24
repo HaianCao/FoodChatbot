@@ -110,7 +110,10 @@ You are an expert AI assistant specialized in Natural Language Understanding (NL
 The recipe database has the following filterable fields with their corresponding units:
 - `prep_time`: Preparation time in **minutes**.
 - `cook_time`: Cooking time in **minutes**.
-- `servings`: Number of people the recipe serves.
+- `servings`: Number of people the recipe serves. Examples:
+  - "món ăn cho gia đình 6 người" → {{"servings": {{"$gte": 6}}}}
+  - "phù hợp cho 4 người" → {{"servings": {{"$gte": 4}}}}
+  - "món cho 2 người" → {{"servings": {{"$gte": 2}}}}
 - **Nutrition Information (Database Units):**
     {nutrition_info}
     - Units can be different between user query and database values or maybe between each in database but still the same scale. You must account for these differences when generating filters.

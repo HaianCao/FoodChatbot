@@ -290,6 +290,8 @@ class ChromaDBManager:
                     nut_name = key.replace('nutr_val_', '').replace('_', ' ').title()
                     unit = metadata.get(f"nutr_unit_{key.replace('nutr_val_', '')}", '')
                     nutri_parts.append(f"{nut_name}: {value}{unit}")
+                elif key == 'servings':
+                    meta_parts.append(f"Servings: {int(value)} people")
                 elif key not in ['url', 'recipe_index'] and not key.startswith('nutr_unit_'):
                     display_key = key.replace('_', ' ').title()
                     meta_parts.append(f"{display_key}: {value}")
@@ -317,3 +319,4 @@ db_manager = ChromaDBManager(
     db_path=str(config.CHROMA_DB_PATH),
     json_path=str(config.PROCESSED_DATA_PATH)
 )
+
