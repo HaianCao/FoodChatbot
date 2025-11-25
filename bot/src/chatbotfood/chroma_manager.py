@@ -37,7 +37,11 @@ class ChromaDBManager:
         """
         if name not in self._collections:
             print(f"INFO: Accessing collection '{name}' for the first time...")
-            self._collections[name] = self.client.get_or_create_collection(name=name)
+            self._collections[name] = self.client.get_or_create_collection(name=name, configuration={
+                "hnsw:space": "cosine",
+                "hnsw:ef_construction": 200,
+                "hnsw:M": 16,
+            })
         return self._collections[name]
 
     def load_recipes_from_json(self, json_path: str) -> int:
@@ -187,7 +191,7 @@ class ChromaDBManager:
             try:
                 collection.add(documents=documents, metadatas=metadatas, ids=ids)
                 total_added += len(documents)
-                print(f"  ✓ Successfully added {len(documents)} recipes to '{collection_name}'.")
+                print(f"Successfully added {len(documents)} recipes to '{collection_name}'.")
             except Exception as e:
                 print(f"ERROR: Failed to add batch to ChromaDB: {e}")
         
@@ -256,6 +260,7 @@ class ChromaDBManager:
             query_text=query_text,
             where=where,
             n_results=min(n_results * 3, 100),  # Fetch more to sort from
+            
         )
         
         if not results or not results.get('documents'):
@@ -278,7 +283,10 @@ class ChromaDBManager:
             content = results['documents'][0][idx]
             metadata = results['metadatas'][0][idx]
             distance = results['distances'][0][idx]
-            similarity = max(0.0, 1.0 - (distance / 2.0))
+            # Cosine distance: range [0, 2], convert to similarity [0, 1]
+            # distance=0 (identical) -> similarity=1.0
+            # distance=2 (opposite) -> similarity=0.0
+            similarity = max(0.0, 1.0 - distance)
 
             # Skip relevance check when sorting by nutrition - we want all sorted results
             if not sort_by and similarity < config.MIN_RELEVANCE_SCORE:
