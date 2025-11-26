@@ -1,11 +1,13 @@
 // Configuration
 const API_ENDPOINT = '/api/chat'; // Update this to your backend endpoint
+const RESET_ENDPOINT = '/api/reset'; // Reset conversation endpoint
 
 // DOM Elements
 const chatMessages = document.getElementById('chatMessages');
 const chatForm = document.getElementById('chatForm');
 const userInput = document.getElementById('userInput');
 const sendButton = document.getElementById('sendButton');
+const resetButton = document.getElementById('resetButton');
 const typingIndicator = document.getElementById('typingIndicator');
 
 // Auto-resize textarea
@@ -330,6 +332,91 @@ function addExampleQueries() {
     //     examplesDiv.appendChild(btn);
     // });
     // chatMessages.appendChild(examplesDiv);
+}
+
+// Reset conversation
+async function resetConversation() {
+    try {
+        // Disable reset button during operation
+        resetButton.disabled = true;
+        resetButton.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
+                <path d="m15 9-6 6" stroke="currentColor" stroke-width="2"/>
+                <path d="m9 9 6 6" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            Resetting...
+        `;
+        
+        // Call reset API
+        const response = await fetch(RESET_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Clear chat messages (keep welcome message)
+        clearChatMessages();
+        
+        // Show success message
+        appendMessage('bot', '✅ Conversation has been reset successfully. How can I help you today?');
+        
+        console.log('Conversation reset:', data.message);
+        
+    } catch (error) {
+        console.error('Reset failed:', error);
+        appendMessage('bot', '❌ Failed to reset conversation. Please try again.', null, true);
+    } finally {
+        // Re-enable reset button
+        resetButton.disabled = false;
+        resetButton.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4C7.58 4 4 7.58 4 12S7.58 20 12 20C15.73 20 18.84 17.45 19.73 14H17.65C16.83 16.33 14.61 18 12 18C8.69 18 6 15.31 6 12S8.69 6 12 6C13.66 6 15.14 6.69 16.22 7.78L13 11H20V4L17.65 6.35Z" fill="currentColor"/>
+            </svg>
+            Reset
+        `;
+    }
+}
+
+// Clear chat messages except welcome message
+function clearChatMessages() {
+    // Find all messages except the first welcome message
+    const messages = chatMessages.querySelectorAll('.message');
+    for (let i = 1; i < messages.length; i++) {
+        messages[i].remove();
+    }
+    
+    // Scroll to top
+    chatMessages.scrollTop = 0;
+}
+
+// Show/hide typing indicator functions
+function showTypingIndicator() {
+    typingIndicator.style.display = 'flex';
+    scrollToBottom();
+}
+
+function hideTypingIndicator() {
+    typingIndicator.style.display = 'none';
+}
+
+// Scroll to bottom of chat
+function scrollToBottom() {
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Get conversation history (optional for this implementation)
+function getConversationHistory() {
+    // For this implementation, we'll return empty as conversation context
+    // is maintained on the server side
+    return [];
 }
 
 // Handle connection errors

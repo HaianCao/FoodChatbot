@@ -1,9 +1,30 @@
-"""
-This module contains prompt templates for the Gemini client.
+"""Prompt templates for the Gemini AI client in the food chatbot application.
+
+This module contains all prompt templates used for various AI operations
+including translation, query rewriting, filter generation, and RAG responses.
+All prompts are designed to work with Google's Gemini AI models.
+
+Author: FoodChatbot Team
+Version: 1.0.0
 """
 
 def get_translation_prompt(text: str) -> str:
-    """Returns the prompt for translating text to English."""
+    """Returns the prompt for translating text to English.
+    
+    Generates a prompt that instructs Gemini to detect the language
+    of input text and translate it to English while preserving
+    numbers, measurements, and units exactly.
+    
+    Args:
+        text: The text to be translated to English.
+        
+    Returns:
+        A formatted prompt string for language detection and translation.
+        
+    Example:
+        >>> prompt = get_translation_prompt("hãy tìm món ăn ít calo")
+        >>> # Returns prompt for Gemini to detect Vietnamese and translate
+    """
     return f"""Detect the language of the text and translate it to English. Preserve all numbers, measurements, and units exactly as they appear.
 
 Return in this format:
@@ -26,7 +47,24 @@ Text: {text}
 Response:"""
 
 def get_back_translation_prompt(text: str, target_language: str) -> str:
-    """Returns the prompt for translating English text to target language."""
+    """Returns the prompt for translating English text to target language.
+    
+    Generates a prompt for back-translation from English to a specified
+    target language, preserving technical terms and measurements.
+    
+    Args:
+        text: The English text to be translated.
+        target_language: The target language code (e.g., 'vi', 'es', 'fr').
+        
+    Returns:
+        A formatted prompt string for back-translation to target language.
+        
+    Example:
+        >>> prompt = get_back_translation_prompt(
+        ...     "Show me low calorie recipes", "vi"
+        ... )
+        >>> # Returns prompt to translate to Vietnamese
+    """
     language_names = {
         'vi': 'Vietnamese',
         'es': 'Spanish',
@@ -48,7 +86,27 @@ Text: {text}
 
 
 def get_query_rewrite_prompt(user_query: str, context_text: str) -> str:
-    """Returns the prompt for rewriting vague queries using conversation context."""
+    """Returns the prompt for rewriting vague queries using conversation context.
+    
+    Generates a prompt that instructs Gemini to rewrite user queries that
+    contain vague references (like "that", "it", "the second one") by
+    replacing them with specific terms from conversation history.
+    
+    Args:
+        user_query: The user's potentially vague query to be rewritten.
+        context_text: Recent conversation history providing context
+            for resolving vague references.
+            
+    Returns:
+        A formatted prompt string for query rewriting.
+        
+    Example:
+        >>> context = "User: show pasta recipes\nBot: Here are 5 pasta dishes..."
+        >>> prompt = get_query_rewrite_prompt(
+        ...     "tell me about the second one", context
+        ... )
+        >>> # Returns prompt to resolve "the second one" to specific dish
+    """
     return f"""You are a query rewriter for a recipe search system. Based on the conversation history below, rewrite the user's new query ONLY if it contains vague references.
 
 CONVERSATION HISTORY:
@@ -91,7 +149,36 @@ YOUR ANSWER (query only):"""
 
 
 def get_filter_generation_prompt(user_query: str, list_of_nutrition: str = "") -> str:
-    """Returns the prompt for generating a ChromaDB filter from a user query."""
+    """Returns the prompt for generating ChromaDB filter from natural language query.
+    
+    Generates a comprehensive prompt that instructs Gemini to convert natural
+    language food queries into structured JSON filters for ChromaDB database.
+    Handles nutrition filters, portion sizes, cooking times, and sorting criteria.
+    
+    The prompt includes:
+        - Database schema with nutrition fields and units
+        - Rules for qualitative vs quantitative terms
+        - Sorting logic for "high", "low", "most", "least" queries
+        - Unit conversion guidelines
+        - JSON schema validation requirements
+        
+    Args:
+        user_query: Natural language query about recipes or nutrition.
+            Examples: "low calorie meals", "high protein dishes under 300 calories"
+        list_of_nutrition: Optional custom nutrition field definitions.
+            If empty, uses default nutrition schema with standard units.
+            
+    Returns:
+        A formatted prompt string for filter generation that produces
+        valid JSON filters for ChromaDB queries.
+        
+    Example:
+        >>> prompt = get_filter_generation_prompt(
+        ...     "show me low sodium dishes with lots of protein"
+        ... )
+        >>> # Returns prompt that generates sorting by protein desc
+        >>> # with sodium filter
+    """
     nutrition_info = list_of_nutrition if list_of_nutrition else """
     - `calories`: Kilocalories (kcal)
     - `protein`: Grams (g)
@@ -156,18 +243,52 @@ User Query: "{user_query}"
 
 
 def get_rag_prompt(user_query: str, context: str) -> str:
-    """Returns the prompt for generating a response using RAG context."""
-    return f"""You are a helpful food and nutrition assistant. Based on the recipe information below, provide a response to the user's question.
+    """Returns the prompt for generating RAG-based responses from recipe context.
+    
+    Creates a prompt that instructs Gemini to answer user questions using
+    ONLY the provided recipe database context. Enforces strict adherence
+    to database-only responses without external knowledge injection.
+    
+    Key features:
+        - Database-only response enforcement
+        - Conditional formatting rules (lists vs detailed recipes)
+        - Source URL attribution for specific recipes
+        - Natural, conversational tone guidelines
+        - Structured ingredient and instruction formatting
+        
+    Formatting behavior:
+        - Multiple recipes: Brief numbered lists with key info
+        - Specific recipe details: Full ingredients and step-by-step instructions
+        - Always include source URLs for detailed recipe responses
+        
+    Args:
+        user_query: The user's question about recipes or cooking.
+            Examples: "show me pasta recipes", "how to make chicken soup"
+        context: Formatted recipe information from ChromaDB search.
+            Contains recipe details, nutrition info, and metadata.
+            
+    Returns:
+        A formatted prompt string that generates database-constrained
+        responses with appropriate formatting for the query type.
+        
+    Example:
+        >>> context = "Recipe: Pasta Salad\nIngredients: pasta, vegetables..."
+        >>> prompt = get_rag_prompt("how to make pasta salad", context)
+        >>> # Returns prompt for detailed recipe with ingredients and steps
+    """
+    return f"""You are a helpful food and nutrition assistant. Based ONLY on the recipe information provided below, answer the user's question.
 
 RECIPE INFORMATION:
 {context if context else "No recipes found matching the query."}
 
 USER QUESTION: {user_query}
 
-IMPORTANT INSTRUCTIONS:
-- Present the information naturally and directly without mentioning databases or data sources
-- Simply list the recipes with their details as if sharing knowledge
-- Include specific details like recipe names and nutritional values
+CRITICAL INSTRUCTIONS:
+- ONLY use information from the RECIPE INFORMATION section above
+- DO NOT use any external knowledge or information not provided in the context
+- If the provided recipe information doesn't contain enough details to answer the question, clearly state that the information is not available in the database
+- Present the information naturally without mentioning databases or data sources
+- Include specific details like recipe names and nutritional values from the provided context only
 - Be helpful, conversational, and natural
 
 FORMATTING RULES:
@@ -208,7 +329,40 @@ Source: https://example.com/pumpkin-chili"
 """
 
 def get_rag_with_history_prompt(user_query: str, context: str) -> str:
-    """Returns the prompt for RAG with conversation history."""
+    """Returns the prompt for RAG responses considering conversation context.
+    
+    Similar to get_rag_prompt but optimized for queries that may reference
+    previous conversation elements. Maintains the same database-only
+    constraint while being more contextually aware.
+    
+    This prompt is used when:
+        - User queries might reference previous recipes shown
+        - Follow-up questions about previously discussed dishes
+        - Conversational context helps resolve ambiguous references
+        
+    Key differences from basic RAG prompt:
+        - Enhanced conversational awareness
+        - Better handling of follow-up questions
+        - Maintains conversation flow and context
+        - Same formatting rules and database constraints
+        
+    Args:
+        user_query: The user's contextual question about recipes.
+            Examples: "tell me more about that pasta", "what about the ingredients"
+        context: Current recipe information from ChromaDB search,
+            potentially filtered by conversation history.
+            
+    Returns:
+        A formatted prompt string for context-aware RAG responses
+        that maintains conversation continuity.
+        
+    Example:
+        >>> context = "Recipe: Chicken Curry\nCalories: 450..."
+        >>> prompt = get_rag_with_history_prompt(
+        ...     "what are the ingredients for this", context
+        ... )
+        >>> # Returns prompt for ingredient details with context awareness
+    """
     return f"""You are a helpful food and nutrition assistant.
 
 RECIPE INFORMATION:
@@ -216,7 +370,10 @@ RECIPE INFORMATION:
 
 USER QUESTION: {user_query}
 
-IMPORTANT INSTRUCTIONS:
+CRITICAL INSTRUCTIONS:
+- ONLY use information from the RECIPE INFORMATION section above
+- DO NOT use any external knowledge or information not provided in the context
+- If the provided recipe information doesn't contain enough details to answer the question, clearly state that the information is not available in the database
 - Present information naturally without mentioning databases or data sources
 - Be conversational and helpful
 

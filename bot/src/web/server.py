@@ -1,3 +1,21 @@
+"""Flask web server for the food chatbot application.
+
+This module provides a web interface for the food chatbot using Flask.
+It serves static files, handles chat API endpoints, and manages user sessions.
+
+Author: FoodChatbot Team
+Version: 1.0.0
+
+API Endpoints:
+    GET /: Serves the main chat interface
+    GET /home/<filename>: Serves CSS and JS assets
+    POST /api/chat: Processes chat messages
+    POST /api/reset: Resets conversation history
+    
+Example:
+    >>> python server.py
+    # Starts server at http://localhost:5000
+"""
 import os
 import flask
 from flask import send_from_directory, request, jsonify
@@ -16,17 +34,51 @@ chatbot = Chatbot()
 
 @app.route('/')
 def home():
-    """Serve the main chat interface"""
+    """Serves the main chat interface HTML page.
+    
+    Returns:
+        The index.html file containing the chat interface.
+    """
     return send_from_directory(STATIC_HOME_DIR, 'index.html')
 
 @app.route('/home/<path:filename>')
 def serve_home_assets(filename):
-    """Serve CSS and JS files"""
+    """Serves static CSS and JavaScript files for the chat interface.
+    
+    Args:
+        filename: The name of the static file to serve (CSS, JS, etc.)
+        
+    Returns:
+        The requested static file from the home directory.
+    """
     return send_from_directory(STATIC_HOME_DIR, filename)
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
-    """Handle chat messages"""
+    """Handles chat messages from the web interface.
+    
+    Processes user messages through the chatbot and returns responses
+    with optional source information.
+    
+    Request JSON:
+        {
+            "message": "user's chat message"
+        }
+        
+    Response JSON:
+        {
+            "response": "chatbot's response",
+            "sources": ["list of source URLs"]
+        }
+        
+    Returns:
+        JSON response with chatbot answer and sources, or error message.
+        
+    HTTP Status Codes:
+        200: Success
+        400: Bad request (missing message)
+        500: Internal server error
+    """
     try:
         data = request.get_json()
         user_message = data.get('message', '')
@@ -58,7 +110,23 @@ def chat():
 
 @app.route('/api/reset', methods=['POST'])
 def reset():
-    """Reset the chat conversation"""
+    """Resets the chat conversation history.
+    
+    Clears the current chat session and conversation buffer,
+    starting a fresh conversation context.
+    
+    Response JSON:
+        {
+            "message": "Conversation reset successfully"
+        }
+        
+    Returns:
+        JSON confirmation message or error.
+        
+    HTTP Status Codes:
+        200: Success
+        500: Internal server error
+    """
     try:
         chatbot.reset_conversation()
         return jsonify({'message': 'Conversation reset successfully'})
@@ -67,8 +135,20 @@ def reset():
         return jsonify({'error': str(e)}), 500
 
 def run_server():
-    """
-    Runs the Flask server for the chatbot application.
+    """Starts the Flask development server for the chatbot application.
+    
+    Launches the web server with debug mode enabled, accessible on
+    all network interfaces at port 5000.
+    
+    Server Configuration:
+        - Host: 0.0.0.0 (all interfaces)
+        - Port: 5000
+        - Debug: True (auto-reload on code changes)
+        
+    Example:
+        >>> run_server()
+        # Server starts at http://localhost:5000
+        # or http://your-ip:5000 for network access
     """
     print("🚀 Starting Food Chatbot Server...")
     print("📍 Visit: http://localhost:5000")
