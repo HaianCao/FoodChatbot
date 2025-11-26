@@ -1,3 +1,18 @@
+
+"""
+Parallel crawler for extracting recipe links from category pages for FoodChatbot.
+
+Features:
+    - Multiprocessing for high performance
+    - Resume support
+    - Saves links to per-category files
+
+Usage:
+    python crawl_recipe_links_parallel.py
+
+Author: FoodChatbot Team
+"""
+
 import os
 import time
 import traceback
@@ -45,17 +60,17 @@ def crawl_one_target(
     start_page: int = 1,
 ) -> int:
     """
-    Crawl a single target and save found links to disk.
-    This function runs in a separate process via ProcessPoolExecutor.
-    
+    Crawl a category (target) and save all found recipe links to a file.
+    Runs in a separate process via ProcessPoolExecutor.
+
     Args:
-        target: Target URL to crawl (e.g., "https://example.com/recipes/")
-        blacklist: Set of URLs to skip
-        headless: Whether to run browser in headless mode
-        start_page: Start crawling from this page number (for resume)
-    
+        target (str): The category URL to crawl (e.g., "https://.../recipes/").
+        blacklist (Set[str]): Set of URLs to skip.
+        headless (bool, optional): Whether to run the browser in headless mode. Defaults to True.
+        start_page (int, optional): Page number to start crawling from (for resume support). Defaults to 1.
+
     Returns:
-        Number of links found and saved for this target.
+        int: The number of links found and saved for this target.
     """
     setup_logging()
     logging.info("Worker started for target: %s (starting from page %d)", target, start_page)
@@ -161,7 +176,16 @@ def crawl_one_target(
 # ============================================================================
 
 def crawl() -> None:
-    """Main parallel crawler entry point."""
+    """
+    Main function to start the parallel crawler for all category targets.
+
+    - Loads target and blacklist URLs from files.
+    - Handles resume logic and worker pool creation.
+    - Summarizes and logs results after crawling.
+
+    Returns:
+        None
+    """
     global CRAWL_FROM_URL, CRAWL_FROM_PAGE
     
     setup_logging()

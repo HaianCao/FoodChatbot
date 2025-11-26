@@ -1,3 +1,12 @@
+"""
+Selenium helper functions for the FoodChatbot crawler.
+
+Includes driver creation, Cloudflare handling, page fetching, link extraction, popup closing, and recipe data extraction.
+Optimized for parallel crawling, timeout handling, headless support, and automatic driver restart on errors.
+
+Author: FoodChatbot Team
+"""
+
 import time
 import random
 import logging
@@ -58,7 +67,20 @@ POLITENESS_DELAY_MAX: float = 1.5  # Maximum delay between page requests
 #==========================================================================
 
 def create_driver(headless: bool = False) -> uc.Chrome:
-    """Create and configure an undetected ChromeDriver instance."""
+    """
+    Create and configure an undetected ChromeDriver instance for web crawling.
+
+    Args:
+        headless (bool, optional): Whether to run Chrome in headless mode. Defaults to False.
+
+    Returns:
+        uc.Chrome: Configured undetected ChromeDriver instance.
+
+    Notes:
+        - Sets page load timeout and window size.
+        - Falls back to default options if custom options fail.
+        - Uses global constants for timeouts and window size.
+    """
     try:
         options = uc.ChromeOptions()
         # Disabling "none" strategy as it can be unreliable.
@@ -84,7 +106,16 @@ def create_driver(headless: bool = False) -> uc.Chrome:
     return driver
 
 def wait_for_cloudflare(driver: uc.Chrome, timeout: int = None) -> bool:
-    """Wait until Cloudflare challenge disappears or timeout."""
+    """
+    Wait until the Cloudflare challenge is solved or a timeout occurs.
+
+    Args:
+        driver (uc.Chrome): The Chrome WebDriver instance.
+        timeout (int, optional): Maximum seconds to wait. Defaults to CLOUDFLARE_CHECK_TIMEOUT.
+
+    Returns:
+        bool: True if Cloudflare challenge is passed, False if timeout.
+    """
     if timeout is None:
         timeout = CLOUDFLARE_CHECK_TIMEOUT
     logging.debug("Waiting for Cloudflare check (timeout=%s)...", timeout)
@@ -106,9 +137,15 @@ def wait_for_cloudflare(driver: uc.Chrome, timeout: int = None) -> bool:
 
 def safe_driver_get(driver: uc.Chrome, url: str, timeout_sec: int) -> Tuple[bool, Optional[Exception]]:
     """
-    Execute driver.get(url) with a timeout using threading.
-    Returns (success, exception_if_any).
-    If timeout expires, returns (False, TimeoutException).
+    Execute driver.get(url) with a timeout using a separate thread.
+
+    Args:
+        driver (uc.Chrome): The Chrome WebDriver instance.
+        url (str): The URL to load.
+        timeout_sec (int): Timeout in seconds for loading the page.
+
+    Returns:
+        Tuple[bool, Optional[Exception]]: (True, None) if successful, (False, Exception) if failed or timed out.
     """
     result = {"success": False, "exception": None}
 
@@ -134,7 +171,20 @@ def safe_driver_get(driver: uc.Chrome, url: str, timeout_sec: int) -> Tuple[bool
 
 
 def restart_driver(current_driver: Optional[uc.Chrome], headless: bool) -> uc.Chrome:
-    """Safely quit current driver and create a new one."""
+    """
+    Safely quit the current ChromeDriver and create a new one.
+
+    Args:
+        current_driver (Optional[uc.Chrome]): The current ChromeDriver instance to quit.
+        headless (bool): Whether to run the new driver in headless mode.
+
+    Returns:
+        uc.Chrome: A new ChromeDriver instance.
+
+    Notes:
+        - Retries driver creation up to 3 times with exponential backoff.
+        - Waits for ports to clear before creating a new driver.
+    """
     if current_driver is not None:
         logging.warning("Restarting driver...")
         try:
@@ -166,8 +216,17 @@ def fetch_page(
     driver: uc.Chrome, url: str, headless: bool, max_attempts: int = None, watchdog_timeout: int = None
 ) -> Tuple[bool, uc.Chrome]:
     """
-    Fetch a page with retries, timeout handling, and robust error recovery.
-    Returns (success, updated_driver).
+    Fetch a web page with retries, timeout handling, and robust error recovery.
+
+    Args:
+        driver (uc.Chrome): The Chrome WebDriver instance.
+        url (str): The URL to fetch.
+        headless (bool): Whether the driver is in headless mode.
+        max_attempts (int, optional): Maximum retry attempts. Defaults to MAX_FETCH_ATTEMPTS.
+        watchdog_timeout (int, optional): Timeout for each attempt. Defaults to WATCHDOG_TIMEOUT.
+
+    Returns:
+        Tuple[bool, uc.Chrome]: (True, driver) if successful, (False, driver) if all attempts fail.
     """
     if max_attempts is None:
         max_attempts = MAX_FETCH_ATTEMPTS
@@ -246,8 +305,16 @@ def manual_solve_cloudflare(
     headless_driver: uc.Chrome, url: str, timeout: int = None
 ) -> bool:
     """
-    Spawn a visible browser to let user manually solve Cloudflare challenge.
-    Copy cookies back to headless driver on success.
+    Spawn a visible browser to let the user manually solve a Cloudflare challenge.
+    Copies cookies back to the headless driver on success.
+
+    Args:
+        headless_driver (uc.Chrome): The headless ChromeDriver instance to update.
+        url (str): The URL requiring manual Cloudflare solve.
+        timeout (int, optional): Maximum seconds to wait for manual solve. Defaults to CLOUDFLARE_MANUAL_SOLVE_TIMEOUT.
+
+    Returns:
+        bool: True if manual solve succeeded and cookies were copied, False otherwise.
     """
     if timeout is None:
         timeout = CLOUDFLARE_MANUAL_SOLVE_TIMEOUT
@@ -300,7 +367,18 @@ def manual_solve_cloudflare(
 
 
 def close_popups(driver: uc.Chrome) -> None:
-    """Close any modal popups or overlays that might be blocking the page."""
+    """
+    Close any modal popups or overlays that might be blocking the page.
+
+    Args:
+        driver (uc.Chrome): The Chrome WebDriver instance.
+
+    Returns:
+        None
+
+    Notes:
+        - Attempts to click close buttons and send ESC key as fallback.
+    """
     try:
         # This will need to be adapted for the specific site's popups
         close_buttons = driver.find_elements(By.CSS_SELECTOR, "button.close, [aria-label='Close']")
@@ -328,14 +406,14 @@ def close_popups(driver: uc.Chrome) -> None:
 def wait_for_element(driver: uc.Chrome, selector: str, timeout: int = 10) -> bool:
     """
     Wait for an element to be present and visible on the page.
-    
+
     Args:
-        driver: The Chrome WebDriver instance
-        selector: CSS selector for the element to wait for
-        timeout: Maximum seconds to wait
-    
+        driver (uc.Chrome): The Chrome WebDriver instance.
+        selector (str): CSS selector for the element to wait for.
+        timeout (int, optional): Maximum seconds to wait. Defaults to 10.
+
     Returns:
-        True if element found and visible, False if timeout
+        bool: True if element found and visible, False if timeout.
     """
     try:
         logging.debug("Waiting for element '%s' (timeout %ds)...", selector, timeout)
@@ -354,7 +432,20 @@ def wait_for_element(driver: uc.Chrome, selector: str, timeout: int = 10) -> boo
 # ===========================================================================
 
 def extract_links_01(target: str):
-    driver = uc.Chrome(headless=False,use_subprocess=True)
+    """
+    Extract all anchor links from a target page and save them to a file.
+
+    Args:
+        target (str): The URL of the page to extract links from.
+
+    Returns:
+        None
+
+    Side Effects:
+        - Launches a Chrome browser.
+        - Writes all found links to OUTPUT_DIR/links.txt.
+    """
+    driver = uc.Chrome(headless=False, use_subprocess=True)
     driver.get(target)
     result = []
     wait_for_cloudflare(driver)
@@ -376,6 +467,15 @@ def extract_links_01(target: str):
 # ===========================================================================
 
 def no_more_links_found(driver: uc.Chrome) -> bool:
+    """
+    Check if the current page indicates there are no more links to crawl.
+
+    Args:
+        driver (uc.Chrome): The Chrome WebDriver instance.
+
+    Returns:
+        bool: True if "Nothing Found" is present in the page source, False otherwise.
+    """
     wait_for_element(driver, "body", timeout=5)
     try:
         if "Nothing Found" in driver.page_source:
@@ -387,8 +487,16 @@ def no_more_links_found(driver: uc.Chrome) -> bool:
 
 def extract_links(driver: uc.Chrome, target_domain: str) -> Tuple[Set[str], Set[str]]:
     """
-    Extract links from page_source.
-    Returns (internal_links_for_crawl, external_links_for_result).
+    Extract all anchor links from the current page, separating internal and external links.
+
+    Args:
+        driver (uc.Chrome): The Chrome WebDriver instance.
+        target_domain (str): The domain to consider as internal.
+
+    Returns:
+        Tuple[Set[str], Set[str]]: (internal_links, external_links)
+            - internal_links: Links containing the target domain and not containing '#'.
+            - external_links: All found links.
     """
     internal_links = set()
     external_links = set()
@@ -420,7 +528,16 @@ def extract_links(driver: uc.Chrome, target_domain: str) -> Tuple[Set[str], Set[
     return internal_links, external_links
 
 def skip_page_if_exists(target: str, page_number: int) -> bool:
-    """Check if page file already exists and should be skipped."""
+    """
+    Check if the file for a given page already exists and should be skipped.
+
+    Args:
+        target (str): The base URL or identifier for the page.
+        page_number (int): The page number to check.
+
+    Returns:
+        bool: True if the file exists and should be skipped, False otherwise.
+    """
     if SKIP_EXISTING_PAGES and PER_PAGE_RESULTS:
         dir_to_create = (
             target.replace("https://", "")
@@ -438,7 +555,16 @@ def skip_page_if_exists(target: str, page_number: int) -> bool:
 # ===========================================================================
 
 def get_text_from_all_children(driver: uc.Chrome, element) -> str:
-    """Extract text including all child elements using JavaScript."""
+    """
+    Extract text from an element, including all child elements, using JavaScript.
+
+    Args:
+        driver (uc.Chrome): The Chrome WebDriver instance.
+        element: The WebElement to extract text from.
+
+    Returns:
+        str: The extracted text, or an empty string if extraction fails.
+    """
     try:
         result = driver.execute_script("""
         if (typeof jQuery === 'undefined') return arguments[0].innerText;
@@ -454,7 +580,16 @@ def get_text_from_all_children(driver: uc.Chrome, element) -> str:
 
 
 def get_text_excluding_children(driver: uc.Chrome, element) -> str:
-    """Extract text excluding child elements using JavaScript."""
+    """
+    Extract text from an element, excluding all child elements, using JavaScript.
+
+    Args:
+        driver (uc.Chrome): The Chrome WebDriver instance.
+        element: The WebElement to extract text from.
+
+    Returns:
+        str: The extracted text, or an empty string if extraction fails.
+    """
     try:
         result = driver.execute_script("""
         if (typeof jQuery === 'undefined') return arguments[0].nodeValue;
@@ -472,7 +607,17 @@ def get_text_excluding_children(driver: uc.Chrome, element) -> str:
 
 
 def get_text_excluding_classes(driver: uc.Chrome, element, excluded_classes: list) -> str:
-    """Extract text excluding elements with certain classes using JavaScript."""
+    """
+    Extract text from an element, excluding any child elements with specified classes, using JavaScript.
+
+    Args:
+        driver (uc.Chrome): The Chrome WebDriver instance.
+        element: The WebElement to extract text from.
+        excluded_classes (list): List of class names to exclude from extraction.
+
+    Returns:
+        str: The extracted text, or an empty string if extraction fails.
+    """
     try:
         result = driver.execute_script("""
         if (typeof jQuery === 'undefined') return arguments[0].innerText;
@@ -508,7 +653,17 @@ def get_text_excluding_classes(driver: uc.Chrome, element, excluded_classes: lis
 
 
 def get_text_including_children(driver: uc.Chrome, element, depth: int) -> str:
-    """Extract text including child elements up to a certain depth using JavaScript."""
+    """
+    Extract text from an element, including child elements up to a specified depth, using JavaScript.
+
+    Args:
+        driver (uc.Chrome): The Chrome WebDriver instance.
+        element: The WebElement to extract text from.
+        depth (int): Maximum depth of child elements to include.
+
+    Returns:
+        str: The extracted text, or an empty string if extraction fails.
+    """
     try:
         result = driver.execute_script("""
         if (typeof jQuery === 'undefined') return arguments[0].innerText;
@@ -534,7 +689,17 @@ def get_text_including_children(driver: uc.Chrome, element, depth: int) -> str:
 
 
 def get_children_elements(driver: uc.Chrome, element, selector: str) -> list:
-    """Get child elements matching selector using JavaScript."""
+    """
+    Get child elements matching a CSS selector using JavaScript.
+
+    Args:
+        driver (uc.Chrome): The Chrome WebDriver instance.
+        element: The WebElement to search within.
+        selector (str): CSS selector for child elements.
+
+    Returns:
+        list: List of matching child WebElements, or an empty list if none found.
+    """
     try:
         result = driver.execute_script("""
         if (typeof jQuery === 'undefined') return [];
@@ -546,6 +711,15 @@ def get_children_elements(driver: uc.Chrome, element, selector: str) -> list:
         return []
     
 def get_summary(driver: uc.Chrome) -> str:
+    """
+    Extract the recipe summary text from the page.
+
+    Args:
+        driver (uc.Chrome): The Chrome WebDriver instance.
+
+    Returns:
+        str: The summary text, or an empty string if not found.
+    """
     try:
         if not wait_for_element(driver, ".wprm-recipe-summary", timeout=3):
             logging.debug("Summary element not found")
@@ -557,6 +731,15 @@ def get_summary(driver: uc.Chrome) -> str:
 
 
 def get_metadata(driver: uc.Chrome) -> list:
+    """
+    Extract metadata fields from the recipe page.
+
+    Args:
+        driver (uc.Chrome): The Chrome WebDriver instance.
+
+    Returns:
+        list: List of metadata strings, or an empty list if not found.
+    """
     metadatas = []
     try:
         if not wait_for_element(driver, ".wprm-recipe-meta-container", timeout=3):
@@ -570,6 +753,15 @@ def get_metadata(driver: uc.Chrome) -> list:
 
 
 def get_ingredients(driver: uc.Chrome) -> list:
+    """
+    Extract the list of ingredients from the recipe page.
+
+    Args:
+        driver (uc.Chrome): The Chrome WebDriver instance.
+
+    Returns:
+        list: List of ingredient strings, or an empty list if not found.
+    """
     ingredients = []
     try:
         if not wait_for_element(driver, ".wprm-recipe-ingredient", timeout=3):
@@ -583,6 +775,15 @@ def get_ingredients(driver: uc.Chrome) -> list:
 
 
 def get_instructions(driver: uc.Chrome) -> list:
+    """
+    Extract the list of instructions from the recipe page.
+
+    Args:
+        driver (uc.Chrome): The Chrome WebDriver instance.
+
+    Returns:
+        list: List of instruction strings, or an empty list if not found.
+    """
     instructions = []
     try:
         if not wait_for_element(driver, ".wprm-recipe-instruction", timeout=3):
@@ -596,6 +797,15 @@ def get_instructions(driver: uc.Chrome) -> list:
 
 
 def get_nutrition(driver: uc.Chrome) -> list:
+    """
+    Extract the nutrition information from the recipe page.
+
+    Args:
+        driver (uc.Chrome): The Chrome WebDriver instance.
+
+    Returns:
+        list: List of nutrition strings, or an empty list if not found.
+    """
     nutritions = []
     try:
         if not wait_for_element(driver, ".wprm-nutrition-label-text-nutrition-container", timeout=3):
@@ -609,6 +819,15 @@ def get_nutrition(driver: uc.Chrome) -> list:
 
 
 def get_comments(driver: uc.Chrome) -> list:
+    """
+    Extract user comments from the recipe page.
+
+    Args:
+        driver (uc.Chrome): The Chrome WebDriver instance.
+
+    Returns:
+        list: List of comment strings, or an empty list if not found.
+    """
     comments = []
     try:
         if not wait_for_element(driver, ".comment-list li article", timeout=3):
@@ -622,6 +841,15 @@ def get_comments(driver: uc.Chrome) -> list:
 
 
 def will_crawl(driver: uc.Chrome) -> bool:
+    """
+    Determine if the current page should be crawled based on the presence of "Cook Mode".
+
+    Args:
+        driver (uc.Chrome): The Chrome WebDriver instance.
+
+    Returns:
+        bool: True if "Cook Mode" is present, False otherwise.
+    """
     page_source = driver.page_source
     if "Cook Mode" in page_source:
         return True

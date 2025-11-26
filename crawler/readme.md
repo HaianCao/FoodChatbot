@@ -36,7 +36,7 @@ Trình thu thập được thiết kế để đảm bảo tính ổn định v�
 │   ├── links.txt           # Các liên kết danh mục ban đầu.
 │   ├── combined.txt        # Tất cả các liên kết công thức riêng lẻ.
 │   └── foods/              # Các tệp JSON cho mỗi công thức đã thu thập.
-└── readme.md               # Tệp này.
+└── README.md               # Tệp này.
 ```
 
 ## Quy trình và Cách chạy

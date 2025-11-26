@@ -1,3 +1,18 @@
+
+"""
+Parallel crawler for extracting detailed recipe information from a list of URLs for FoodChatbot.
+
+Features:
+    - Multithreading for concurrent crawling
+    - Automatic resume capability
+    - Saves each recipe as a JSON file
+
+Usage:
+    python crawl_recipe_infos_parallel.py
+
+Author: FoodChatbot Team
+"""
+
 import os
 import time
 import logging
@@ -52,8 +67,17 @@ results_count = {"success": 0, "failed": 0, "skipped": 0}
 
 def crawl_target(driver: uc.Chrome, target_url: str, headless: bool) -> Tuple[bool, uc.Chrome]:
     """
-    Crawl a single target URL and extract recipe data.
-    Returns a tuple of (success_boolean, driver_instance).
+    Crawl a recipe URL and extract recipe data fields.
+
+    Args:
+        driver (uc.Chrome): The current Chrome WebDriver instance.
+        target_url (str): The recipe URL to crawl.
+        headless (bool): Whether to run the browser in headless mode.
+
+    Returns:
+        Tuple[bool, uc.Chrome]:
+            - success (bool): True if crawl succeeded or was skipped, False if failed.
+            - driver (uc.Chrome): The possibly restarted driver instance.
     """
     try:
         filename = target_url.replace("https://therecipecritic.com/", "").replace("/", "_")
@@ -116,7 +140,16 @@ def crawl_target(driver: uc.Chrome, target_url: str, headless: bool) -> Tuple[bo
 
 
 def worker_thread(worker_id: int, headless: bool) -> None:
-    """Worker thread that processes targets from the queue."""
+    """
+    Worker thread that processes URLs from the queue for parallel crawling.
+
+    Args:
+        worker_id (int): The worker's ID (starting from 1).
+        headless (bool): Whether to run the browser in headless mode.
+
+    Returns:
+        None
+    """
     logging.info("Worker %d started", worker_id)
     driver = None
     
@@ -204,7 +237,17 @@ def worker_thread(worker_id: int, headless: bool) -> None:
 # ============================================================================
 
 def crawl() -> None:
-    """Main function for parallel crawler."""
+    """
+    Main function to start the parallel crawler, manage the queue and workers, and summarize results.
+
+    - Combines input files and sets up logging.
+    - Initializes the queue and worker threads.
+    - Waits for all crawling tasks to complete and prints a summary.
+    - Cleans up Chrome processes after crawling.
+
+    Returns:
+        None
+    """
     combine_files("data", "data/combined.txt")
     setup_logging()
     
