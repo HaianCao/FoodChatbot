@@ -101,8 +101,7 @@ trúc Retrieval-Augmented Generation (RAG), kết hợp
 mô hình ngôn ngữ lớn Gemini và cơ sở dữ liệu 
 vector để nâng cao khả năng truy xuất và tổng hợp 
 tri thức. Dữ liệu ẩm thực được chuẩn hóa, mã hóa 
-thành vector embedding và lưu trữ trong vector 
-database để đảm bảo việc tìm kiếm thông tin nhanh 
+thành vector nhúng và lưu trữ trong cơ sở dữ liệu vector để đảm bảo việc tìm kiếm thông tin nhanh 
 chóng và chính xác. Khi người dùng đặt câu hỏi, 
 hệ thống tự động truy xuất các tài liệu liên quan 
 và sử dụng Gemini LLM để tạo ra câu trả lời tự 
@@ -158,9 +157,9 @@ thay vì tìm kiếm từ khóa truyền thống.
 Thách thức kỹ thuật bao gồm:
 \begin{itemize}
     \item Chuẩn hóa và làm sạch dữ liệu không đồng 
-    nhất từ nhiều nguồn.
+    nhất.
     \item Mã hóa tri thức bằng các vector 
-    embedding có chất lượng cao.
+    nhúng có chất lượng cao.
     \item Thiết kế cơ chế truy vấn tối ưu nhằm 
     đảm bảo kết quả trả về chính xác và phù hợp 
     nhất với truy vấn.
@@ -274,7 +273,7 @@ chi tiết như sau:
 
     \item \textbf{Thu thập dữ liệu ẩm thực}: Dữ 
     liệu được lấy từ trang web nấu ăn uy tín 
-    thông qua hệ thống khai thác dữ liệu (crawler). Bộ dữ liệu bao 
+    thông qua hệ thống khai thác dữ liệu. Bộ dữ liệu bao 
     gồm thông tin chi tiết về tên món ăn, mô tả sơ lược, \
     thành phần nguyên liệu,
     hướng dẫn nấu theo từng bước, thời gian chế 
@@ -290,16 +289,16 @@ chi tiết như sau:
     trưng quan trọng được trích xuất để phục vụ 
     cho việc embedding và truy xuất dữ liệu.
     
-    \item \textbf{Sinh vector embedding}: Văn bản 
+    \item \textbf{Sinh vector nhúng}: Văn bản 
     sau khi được chuẩn hóa được đưa vào mô hình 
-    embedding để chuyển đổi thành vector biểu 
+    nhúng từ để chuyển đổi thành vector biểu 
     diễn tương ứng. Các vector này mã hóa thông 
     tin ngữ nghĩa của món ăn giúp hệ thống có thể 
     truy vấn hiệu quả theo nghĩa (semantic search) 
     thay vì chỉ tìm kiếm theo từ khóa.
     
     \item \textbf{Lưu trữ tri thức vào cơ sở 
-    dữ liệu vector}: Các vector embedding cùng 
+    dữ liệu vector}: Các vector nhúng cùng 
     với metadata được lưu trữ trong ChromaDB. 
     Cơ sở dữ liệu vector cho phép hệ thống thực 
     hiện tìm kiếm dựa trên độ tương đồng cosine, 
@@ -307,9 +306,9 @@ chi tiết như sau:
     đến ngữ cảnh và ý định người dùng.
     
     \item \textbf{Tìm kiếm ngữ nghĩa}: Khi người 
-    dùng đưa ra câu hỏi, hệ thống sinh embedding 
+    dùng đưa ra câu hỏi, hệ thống sinh vector nhúng 
     cho truy vấn, sau đó truy xuất các vector 
-    gần nhất trong không gian embedding. Các 
+    gần nhất trong không gian nhúng. Các 
     tài liệu liên quan nhất được lựa chọn và 
     ghép vào ngữ cảnh đầu vào cho mô hình LLM.
     
@@ -504,17 +503,17 @@ phức tạp và sinh hướng dẫn nấu ăn.
 Trong dự án, Gemini được khai thác với khả năng 
 đa ngôn ngữ: hệ thống có thể tiền xử lý truy vấn 
 đầu vào (chẳng hạn dịch sang tiếng Anh để tương 
-thích tốt hơn với vector DB / embedding được 
+thích tốt hơn với vector DB / vector nhúng được 
 thống nhất), sau đó sinh phản hồi bằng ngôn ngữ 
 người dùng. Việc này tối ưu hóa độ tương đồng 
-ngữ nghĩa khi embedding và truy xuất.
+ngữ nghĩa khi nhúng và truy xuất.
 
 \paragraph{Cải tiến kiến trúc trong Gemini 2.5 Flash-Lite\cite{gemini_2.5}}
 Khác với kiến trúc Transformer 
 tiêu chuẩn (Dense Transformer) nêu trên, mô hình 
 Gemini 2.5 Flash-Lite tích hợp các kỹ thuật tối 
 ưu hóa hiện đại nhằm cân bằng giữa hiệu năng tính 
-toán (FLOPs) và khả năng suy luận, đặc biệt phù 
+toán và khả năng suy luận, đặc biệt phù 
 hợp cho các hệ thống yêu cầu độ trễ thấp:
 
 \textbf{1. Mixture-of-Experts (MoE) thưa\cite{gemini_1.5}:} 
@@ -573,15 +572,15 @@ trong các khối FFN:
 \text{SwiGLU}(x, W, V, W_2) = (\text{Swish}(xW) \otimes (xV)) W_2.
 \]
 
-\subsubsection{Vector Database và Embedding}
+\subsubsection{Vector Database và Nhúng từ}
 
-\paragraph{Ý tưởng embedding}
-Embedding là hàm ánh xạ \(f: \text{Text} \to 
+\paragraph{Ý tưởng nhúng từ}
+Nhúng từ là hàm ánh xạ \(f: \text{Text} \to 
 \mathbb{R}^d\) đưa một đoạn văn bản (ví dụ: 
 tên món, danh sách nguyên liệu, bước nấu) về 
 không gian vector \(d\)-chiều sao cho các văn 
 bản có ý nghĩa tương tự nằm gần nhau. ChromaDB cung cấp pipeline để 
-sinh embedding cho từng document và lưu trữ 
+sinh nhúng từ cho từng văn bản và lưu trữ 
 chúng cùng metadata.
 
 \paragraph{Cách cấu trúc dữ liệu}
@@ -602,9 +601,10 @@ Mỗi mục trong database gồm:
     vấn không phụ thuộc vào từ khóa chính xác.
     \item \textbf{Khả năng mở rộng}: lưu trữ 
     hàng chục ngàn đến hàng triệu vectors, kết 
-    hợp ANN để truy vấn hiệu quả.
+    hợp ANN (Approximate Nearest Neighbor Search 
+    - Tìm kiếm láng giềng gần đúng) để truy vấn hiệu quả.
     \item \textbf{Dễ cập nhật tri thức}: chỉ 
-    cần thêm/sửa document mà không phải fine-tune 
+    cần thêm/sửa văn bản mà không phải fine-tune 
     LLM.
 \end{itemize}
 
@@ -617,20 +617,20 @@ tương đồng cosine được tính:
 \[
 \text{cosine}(u,v) = \frac{u \cdot v}{\|u\| \cdot \|v\|} = \frac{\sum_{i=1}^d u_i v_i}{\sqrt{\sum_{i=1}^d u_i^2} \cdot \sqrt{\sum_{i=1}^d v_i^2}} 
 \]
-Mục tiêu là chọn những document có cosine cao 
-nhất so với embedding của truy vấn.
+Mục tiêu là chọn những văn bản có cosine cao 
+nhất so với vector nhúng của truy vấn.
 
 \paragraph{Thuộc tính và ngưỡng}
 \begin{itemize}
     \item Giá trị nằm trong \([-1,1]\), nhưng 
-    với embedding từ LLM/public models thường 
-    nằm trong \([0,1]\) do cấu trúc embedding.
+    với nhúng từ từ LLM/public models thường 
+    nằm trong \([0,1]\) do cấu trúc nhúng.
     \item Thực tiễn: đặt ngưỡng lọc (ví dụ 
-    0.65–0.75) để loại bỏ document không liên 
+    0.65–0.75) để loại bỏ văn bản không liên 
     quan; ngưỡng cụ thể cần hiệu chỉnh dựa trên 
     đánh giá thực nghiệm.
     \item Kết hợp với ranking dựa trên cosine 
-    để chọn top-\(k\) document (k thường trong 
+    để chọn top-\(k\) văn bản (k thường trong 
     khoảng 3–10).
 \end{itemize}
 
@@ -830,7 +830,7 @@ quá trình khai thác tự động. Mỗi trang công thức
 nấu ăn được tách và lưu trữ dưới dạng một tệp 
 JSON chứa đầy đủ các thành phần thông tin cần 
 thiết phục vụ cho bước trích xuất tri thức và 
-tạo embedding.
+tạo nhúng từ.
 
 \subsubsection{Cấu trúc dữ liệu thô}
 
@@ -839,13 +839,24 @@ dưới dạng một đối tượng JSON có cấu trúc thống
 nhất như sau:
 
 \begin{itemize}
-    \item \textbf{URL}: đường dẫn tuyệt đối đến trang công thức gốc.
-    \item \textbf{Summary}: đoạn mô tả ngắn gọn về món ăn, thường do tác giả cung cấp.
-    \item \textbf{Metadata}: tập hợp thông tin định lượng như thời gian sơ chế, thời gian nấu, tổng thời gian và số khẩu phần.
-    \item \textbf{Ingredients}: danh sách nguyên liệu cần thiết, mỗi mục là một chuỗi mô tả đầy đủ định lượng và tên nguyên liệu.
-    \item \textbf{Instructions}: chuỗi các bước hướng dẫn nấu ăn theo thứ tự.
-    \item \textbf{Nutrition}: thông tin dinh dưỡng cho mỗi khẩu phần (calories, fat, protein, v.v.).
-    \item \textbf{Comments}: các bình luận từ người dùng thật, giúp chatbot có thêm dữ liệu phản ánh trải nghiệm thực tế.
+    \item \textbf{URL}: đường dẫn tuyệt đối đến 
+    trang công thức gốc.
+    \item \textbf{Summary}: đoạn mô tả ngắn gọn 
+    về món ăn, thường do tác giả cung cấp.
+    \item \textbf{Metadata}: tập hợp thông tin 
+    định lượng như thời gian sơ chế, thời gian 
+    nấu, tổng thời gian và số khẩu phần.
+    \item \textbf{Ingredients}: danh sách nguyên 
+    liệu cần thiết, mỗi mục là một chuỗi mô tả 
+    đầy đủ định lượng và tên nguyên liệu.
+    \item \textbf{Instructions}: chuỗi các bước 
+    hướng dẫn nấu ăn theo thứ tự.
+    \item \textbf{Nutrition}: thông tin dinh 
+    dưỡng cho mỗi khẩu phần (calories, fat, 
+    protein, v.v.).
+    \item \textbf{Comments}: các bình luận từ 
+    người dùng thật, giúp chatbot có thêm dữ 
+    liệu phản ánh trải nghiệm thực tế.
 \end{itemize}
 
 \subsubsection{Lưu trữ và tiền xử lý}
@@ -886,12 +897,12 @@ thống RAG:
     \item \textbf{Chuẩn hóa cấu trúc dữ liệu:} 
     Mọi danh sách và dictionary đều được chuẩn 
     hóa, bảo đảm định dạng đồng nhất cho 
-    embedding và indexing.
+    nhúng từ và đánh chỉ số.
     
     \item \textbf{Lưu trữ dữ liệu cuối:} Dữ 
     liệu đã xử lý được hợp nhất thành một tệp 
     JSON duy nhất, sẵn sàng cho các bước 
-    embedding, tìm kiếm và truy vấn.
+    nhúng từ, tìm kiếm và truy vấn.
 \end{itemize}
 
 \noindent
@@ -1223,7 +1234,7 @@ backend thực hiện quy trình sau:
         \{\text{response},\ \text{sources}\}.
     \]
 \end{enumerate}
-
+ 
 \subsubsection{Luồng xử lý của \texttt{/api/reset}}
 
 \begin{enumerate}
