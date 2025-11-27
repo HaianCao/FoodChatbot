@@ -385,3 +385,24 @@ FORMATTING RULES:
 - Never write as paragraphs
 - IMPORTANT: When showing details for a specific recipe, always include the source URL at the end in format: "Source: [URL]"
 """
+
+# --- SOFT MEMORY PREFERENCE EXTRACTION PROMPT ---
+def get_preference_extraction_prompt(user_query: str, conversation_context: str = "") -> str:
+    """Returns a prompt for Gemini to extract user preferences/goals from query and context.
+    This prompt instructs Gemini to analyze the user's current query and recent conversation
+    to extract explicit or implicit preferences, dietary goals, favorite/avoided ingredients,
+    cuisine types, or nutrition targets. The output is a structured JSON object summarizing
+    the user's current preferences/goals for use in in-context personalization.
+    Args:
+        user_query: The user's current query (any language).
+        conversation_context: Recent conversation history (optional, can be empty).
+    Returns:
+        A formatted prompt string for Gemini to extract preferences/goals as JSON.
+    Example:
+        >>> prompt = get_preference_extraction_prompt(
+        ...     "Tôi muốn ăn món ít calo, nhiều protein, không có thịt bò",
+        ...     "User: Tôi thích món ăn chay\nAssistant: Bạn muốn ăn món chay nào?"
+        ... )
+        # Returns prompt for Gemini to extract preferences/goals
+    """
+    return f"""You are an expert assistant for extracting user preferences and dietary goals from food-related conversations.\n\nAnalyze the user's current query and the recent conversation context (if any) to identify:\n- Explicit or implicit dietary goals (e.g., low calorie, high protein, vegetarian, keto, etc.)\n- Favorite or avoided ingredients (e.g., likes chicken, dislikes beef, allergic to peanuts)\n- Preferred cuisine types (e.g., Italian, Vietnamese, Mediterranean)\n- Nutrition targets (e.g., less than 500 calories, more than 20g protein)\n- Any other relevant food preferences or restrictions\n\nOutput a single JSON object summarizing the user's current preferences and goals, using these keys:\n  - \"dietary_goals\": List of dietary goals (e.g., [\"low calorie\", \"high protein\", \"vegetarian\"])\n  - \"preferred_ingredients\": List of ingredients the user likes (e.g., [\"chicken\", \"tofu\"])\n  - \"avoided_ingredients\": List of ingredients the user dislikes or avoids (e.g., [\"beef\", \"peanuts\"])\n  - \"cuisine_types\": List of preferred cuisines (e.g., [\"Vietnamese\", \"Italian\"])\n  - \"nutrition_targets\": List of nutrition targets (e.g., [\"calories < 500\", \"protein > 20g\"])\n  - \"other\": List of any other relevant preferences or goals\n\nIf a field is not mentioned or cannot be inferred, use an empty list for that field.\nReturn ONLY the JSON object, no explanations.\n\nEXAMPLES:\nUser Query: \"Tôi muốn ăn món ít calo, nhiều protein, không có thịt bò\"\nConversation Context: \"User: Tôi thích món ăn chay\\nAssistant: Bạn muốn ăn món chay nào?\"\nOutput:\n{{\n  \"dietary_goals\": [\"low calorie\", \"high protein\", \"vegetarian\"],\n  \"preferred_ingredients\": [],\n  \"avoided_ingredients\": [\"beef\"],\n  \"cuisine_types\": [],\n  \"nutrition_targets\": [],\n  \"other\": []\n}}\n\nUser Query: \"Show me Italian pasta recipes with chicken, no cheese, under 400 calories\"\nConversation Context: \"User: I love Italian food\\nAssistant: What kind of Italian dishes do you like?\"\nOutput:\n{{\n  \"dietary_goals\": [],\n  \"preferred_ingredients\": [\"chicken\"],\n  \"avoided_ingredients\": [\"cheese\"],\n  \"cuisine_types\": [\"Italian\"],\n  \"nutrition_targets\": [\"calories < 400\"],\n  \"other\": [\"pasta\"]\n}}\n\nUSER QUERY: {user_query}\nCONVERSATION CONTEXT:\n{conversation_context}\n\nYOUR ANSWER (JSON only):"""

@@ -63,6 +63,15 @@ class Chatbot:
         
         # Track conversation for query rewriting (light buffer, last 10 messages)
         self.conversation_buffer = []
+        # Soft memory: user preferences/goals for in-context personalization
+        self.user_preferences = {
+            "dietary_goals": [],
+            "preferred_ingredients": [],
+            "avoided_ingredients": [],
+            "cuisine_types": [],
+            "nutrition_targets": [],
+            "other": []
+        }
     
     def _initialize_recipe_collection(self):
         """Initialize the recipes collection if it's empty.
@@ -122,12 +131,24 @@ class Chatbot:
         """
         print(f"User: {user_query}")
 
+
         # Rewrite query first to resolve vague references using conversation buffer
         # This preserves the original language context and semantics
         rewritten_query = self.gemini_client.rewrite_query_with_context(
             user_query, 
             self.conversation_buffer
         )
+
+        # Extract and update user preferences/goals (soft memory)
+        extracted_prefs = self.gemini_client.extract_user_preferences(
+            rewritten_query,
+            self.conversation_buffer
+        )
+        # Merge new preferences into session (union of lists, no duplicates)
+        for k in self.user_preferences:
+            if k in extracted_prefs:
+                combined = set(self.user_preferences[k]) | set(extracted_prefs[k])
+                self.user_preferences[k] = list(combined)
 
         # Translate rewritten query to English for processing and detect language
         translated_query, user_language = self.gemini_client.translate_to_english(rewritten_query)
@@ -153,32 +174,105 @@ class Chatbot:
             sort_order=sort_order,
             limit=limit
         )
-        print(rag_context)
+        # print(rag_context)
 
-        # Generate the final response using chat session with system instruction
-        system_instruction = """You are a friendly and approachable assistant. 
-You may engage in light, simple, everyday small talk in a warm and polite tone, 
-while avoiding deep or sensitive topics.
 
-When the user asks about food, dishes, recipes, or nutrition, follow these rules:
+        # Inject user preferences into the system instruction for Gemini
+        preferences_text = "\n".join([
+            f"Dietary goals: {', '.join(self.user_preferences['dietary_goals'])}" if self.user_preferences['dietary_goals'] else "",
+            f"Preferred ingredients: {', '.join(self.user_preferences['preferred_ingredients'])}" if self.user_preferences['preferred_ingredients'] else "",
+            f"Avoided ingredients: {', '.join(self.user_preferences['avoided_ingredients'])}" if self.user_preferences['avoided_ingredients'] else "",
+            f"Cuisine types: {', '.join(self.user_preferences['cuisine_types'])}" if self.user_preferences['cuisine_types'] else "",
+            f"Nutrition targets: {', '.join(self.user_preferences['nutrition_targets'])}" if self.user_preferences['nutrition_targets'] else "",
+            f"Other preferences: {', '.join(self.user_preferences['other'])}" if self.user_preferences['other'] else ""
+        ])
+        preferences_text = preferences_text.strip()
 
-1. Prefer the provided recipe database:
-   - Always use information from the database first whenever available.
-   - You may use limited external knowledge only to fill small gaps,
-     but do NOT invent details or make strong assumptions beyond what is reasonable.
+        system_instruction = f"""You are a friendly and approachable culinary assistant. 
+Your tone is warm, polite, and suitable for everyday conversation. 
+You may engage in light small talk but avoid deep or sensitive topics.
 
-2. Topic restriction:
-   - If a food-related question falls completely outside your allowed domain,
-     politely refuse and state that it's out of scope.
+============================================================
+= 1. DATA PRIORITY RULES (RAG-FIRST)                       =
+============================================================
 
-3. Missing dish rule:
-   - If a requested dish is not found in the recipe database, clearly say it's not available.
-   - Then suggest a few related or similar dishes from the database if possible.
+1. Always prioritize the provided recipe database.
+2. Any food-related or nutrition-related answer must rely on database content first.
+3. If specific information is missing from the database, clearly say so.
+4. You may use limited general culinary knowledge only to fill small gaps.
+5. Never invent ingredients, steps, or nutritional details outside reasonable assumptions.
 
-4. Transparency:
-   - If specific information is missing from the database, explicitly say so.
-"""
-        
+If the question is completely outside food, cooking, or nutrition, politely refuse.
+
+If a dish is not found in the database:
+- Say that it is not available.
+- Suggest similar or related dishes from the database.
+
+============================================================
+= 2. INGREDIENT SUBSTITUTION RULES                          =
+============================================================
+
+Only suggest substitutions when the user explicitly asks 
+(e.g., “tôi không có nguyên liệu này”, “thay bằng gì được?”).
+
+1. Prefer substitutions listed in the recipe database.
+2. If the database has no substitution information, say so first.
+3. You may use basic, common culinary knowledge for simple substitutions.
+4. Never propose replacements that drastically change the dish unless the user asks.
+5. Inform the user if substitution might slightly alter flavor or texture.
+
+============================================================
+= 3. PERSONALIZATION VIA SOFT MEMORY (IN-CONTEXT LEARNING) =
+============================================================
+
+You progressively learn about the user's preferences, diet goals,
+ingredient constraints, dislikes, and habitual cooking patterns.
+
+Rules:
+1. ONLY use information explicitly provided by the user.
+2. Do NOT infer or guess hidden health conditions.
+3. Never provide medical advice, diagnosis, or disease treatment suggestions.
+4. You may update and use a structured User Profile (provided in-context) 
+   to improve future recommendations.
+5. This personalization is allowed for:
+   - preferred flavors (cay, ít dầu mỡ…)
+   - preferred cuisines
+   - disliked ingredients
+   - common missing ingredients
+   - dietary goals (high-protein, low-carb, low-fat, eat-clean…)
+   - cooking style (món nhanh, ít bước, ít nguyên liệu…)
+
+============================================================
+= 4. NUTRITIONAL GUIDANCE (NON-MEDICAL)                     =
+============================================================
+
+You may adjust recommendations based on:
+- User’s dietary goals (tăng cơ, giảm carb, giảm chất béo…)
+- Lifestyle-related preferences (ăn nhanh, ăn nhẹ…)
+- Non-medical nutritional balancing (high protein, low carb, high fiber)
+
+BUT you must:
+- Avoid medical claims.
+- Avoid linking food to disease treatment.
+- Tell the user to consult a professional if the topic becomes medical.
+
+============================================================
+= 5. TRANSPARENCY AND SAFETY                                =
+============================================================
+
+- Be honest when the database lacks information.
+- Avoid strong claims (“cực tốt”, “chắc chắn giúp chữa bệnh”).
+- Use soft, safe wording (“bạn có thể cân nhắc”, “có thể phù hợp”, “có thể muốn hạn chế…”).
+- Respect user privacy and avoid storing sensitive health data unless explicitly permitted.
+
+============================================================
+= 6. RESPONSE QUALITY                                        =
+============================================================
+
+- Provide clear, structured, helpful answers.
+- Maintain high factual accuracy.
+- Never hallucinate missing recipe details.
+        """
         response = self.gemini_client.generate_with_conversation_and_rag(
             user_query=translated_query,
             rag_context=rag_context,

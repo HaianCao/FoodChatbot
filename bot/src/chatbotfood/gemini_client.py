@@ -20,6 +20,52 @@ db_manager = None  # Will be assigned the singleton instance of ChromaDBManager
 from .chroma_manager import db_manager
 
 class GeminiClient:
+
+    def extract_user_preferences(self, user_query: str, conversation_history: list = None) -> dict:
+        """Extract user preferences/goals from query and conversation context using Gemini.
+        Uses a prompt to instruct Gemini to return a structured JSON object summarizing
+        dietary goals, preferred/avoided ingredients, cuisine types, nutrition targets, etc.
+        Args:
+            user_query: The user's current query (any language).
+            conversation_history: List of recent message dicts (role/text), can be empty.
+        Returns:
+            Dictionary with keys: dietary_goals, preferred_ingredients, avoided_ingredients,
+            cuisine_types, nutrition_targets, other. All values are lists.
+        """
+        # Build conversation context as text
+        context_text = "\n".join([
+            f"User: {msg['text']}" if msg['role'] == 'user' else f"Assistant: {msg['text']}"
+            for msg in (conversation_history or [])
+        ])
+        prompt = prompts.get_preference_extraction_prompt(user_query, context_text)
+        try:
+            response = self.client.models.generate_content(
+                model=self.DEFAULT_MODEL,
+                contents=[
+                    types.Content(
+                        role="user",
+                        parts=[types.Part.from_text(text=prompt)]
+                    )
+                ]
+            )
+            # Remove markdown code block if present
+            raw = response.text.strip()
+            if raw.startswith('```json'):
+                raw = raw[7:]
+            if raw.startswith('```'):
+                raw = raw[3:]
+            if raw.endswith('```'):
+                raw = raw[:-3]
+            prefs = json.loads(raw)
+            # Ensure all expected keys exist and are lists
+            keys = ["dietary_goals", "preferred_ingredients", "avoided_ingredients", "cuisine_types", "nutrition_targets", "other"]
+            for k in keys:
+                if k not in prefs or not isinstance(prefs[k], list):
+                    prefs[k] = []
+            return prefs
+        except Exception as e:
+            print(f"⚠️  Preference extraction failed: {e}. Returning empty preferences.")
+            return {k: [] for k in ["dietary_goals", "preferred_ingredients", "avoided_ingredients", "cuisine_types", "nutrition_targets", "other"]}
     """Client for interacting with Google's Gemini API with RAG capabilities.
     
     This class handles all interactions with Google's Gemini AI models,
