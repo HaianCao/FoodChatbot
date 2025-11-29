@@ -21,7 +21,7 @@ Trình thu thập được thiết kế để đảm bảo tính ổn định v�
 ## Cấu trúc
 
 ```
-.
+crawler
 ├── packages/
 │   ├── selenium_handler.py # Logic Selenium cốt lõi, tạo driver, trích xuất dữ liệu
 │   ├── logging_handler.py  # Cấu hình logging tập trung
@@ -35,21 +35,17 @@ Trình thu thập được thiết kế để đảm bảo tính ổn định v�
 ├── data/                   # Thư mục đầu ra cho dữ liệu đã thu thập.
 │   ├── links.txt           # Các liên kết danh mục ban đầu.
 │   ├── combined.txt        # Tất cả các liên kết công thức riêng lẻ.
+│   ├── blacklist.txt       # Các liên kết không liên quan được bỏ qua.
 │   └── foods/              # Các tệp JSON cho mỗi công thức đã thu thập.
 └── README.md               # Tệp này.
 ```
 
 ## Quy trình và Cách chạy
-
-### 1. Cài đặt
-
-Đầu tiên, cài đặt các gói Python cần thiết:
+Sau khi đã thiết lập xong môi trường ảo (Hướng dẫn tại https://github.com/HaianCao/FoodChatbot/blob/main/README.md)
 
 ```bash
-pip install -r requirements.txt
+cd crawler
 ```
-
-### 2. Quy trình Thực thi
 
 Trình thu thập hoạt động theo ba giai đoạn riêng biệt. Chạy chúng theo thứ tự sau:
 

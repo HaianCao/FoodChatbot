@@ -57,7 +57,7 @@
         \textbf{Trường:} & VNU-HUS (Đại học Quốc gia Hà Nội -- Trường Đại học Khoa học Tự nhiên) \\
         \textbf{Tên dự án:} & Chatbot Ẩm Thực \\
         \textbf{Ngày nộp:} & {[Ngày nộp]} (ví dụ: 30/06/2025) \\
-        \textbf{Báo cáo PDF:} & \href{[PDF Link]}{Liên kết tới báo cáo PDF trong kho GitHub} \\
+        \textbf{Báo cáo PDF:} & \href{https://github.com/HaianCao/FoodChatbot/blob/main/LaTeX%20Template/main-vi.pdf}{Báo cáo dự án Chatbot Ẩm Thực} \\
         \textbf{Slide thuyết trình:} & \href{[Slides Link]}{Liên kết tới slide thuyết trình trong kho GitHub} \\
         \textbf{Kho GitHub:} & \url{https://github.com/HaianCao/FoodChatbot}
     \end{tabular}
@@ -1595,7 +1595,8 @@ Tổng hợp các lỗi phổ biến từ 100 phiên được chia thành các n
 Kết quả cho thấy hệ thống chatbot đã đạt được:
 
 \begin{itemize}
-    \item Khả năng hiểu yêu cầu người dùng trong nhiều ngôn ngữ.
+    \item Khả năng hiểu yêu cầu người dùng trong 
+    nhiều ngôn ngữ.
     \item Gợi ý món ăn chính xác và phù hợp với nhu cầu sức khỏe.
     \item Giảm thiểu ảo giác nhờ phụ thuộc vào cơ sở dữ liệu đã xác thực.
     \item Tương tác thân thiện và chất lượng hội thoại cải thiện theo thời gian.
@@ -1607,7 +1608,93 @@ Mặc dù còn hạn chế về độ phong phú của dữ liệu, hệ thống
 \chapter{Kết luận}
 
 \section{Kết luận \& Hướng phát triển}
-[Tóm tắt đóng góp và đề xuất cải tiến hoặc hướng phát triển tiếp theo.]
+
+Trong báo cáo này, hệ thống chatbot gợi ý món ăn 
+đã được xây dựng dựa trên kiến trúc 
+Retrieval-Augmented Generation (RAG) kết hợp với 
+mô hình ngôn ngữ lớn (LLM), cho phép hiểu yêu 
+cầu người dùng, truy xuất dữ liệu công thức 
+món ăn và sinh câu trả lời tự nhiên theo văn 
+phong hội thoại. Tập dữ liệu được thu thập và 
+chuẩn hoá từ nguồn \texttt{therecipecritic.com}, 
+sau đó chuyển thành không gian nhúng 
+(embedding space) để thực hiện tìm kiếm ngữ 
+nghĩa hiệu quả.
+
+Kết quả thực nghiệm cho thấy hệ thống đạt chất 
+lượng tốt, đặc biệt trong bối cảnh hội thoại 
+nhiều lượt. Độ thiện cảm (likability) tăng dần 
+khi số lượt hội thoại tăng, phản ánh khả năng 
+thích nghi ngữ cảnh và phong cách trò chuyện 
+của mô hình. Độ chính xác tích lũy của các câu 
+trả lời cũng tăng đáng kể, nhờ cơ chế lưu trữ 
+ngữ cảnh và khai thác thông tin đã được tích 
+luỹ trong phiên hội thoại. Ngoài ra, hệ thống 
+thể hiện khả năng phân tích yêu cầu phức tạp 
+về dinh dưỡng, sức khỏe, các thành phần cần 
+tránh (allergens), và hỗ trợ người dùng bằng 
+nhiều ngôn ngữ.
+
+Mặc dù vậy, hệ thống vẫn tồn tại một số hạn chế 
+như quy mô dữ liệu nhỏ, tính đa dạng ẩm thực 
+còn thấp, thiếu thông tin dinh dưỡng đầy đủ cho 
+nhiều món, và sự phụ thuộc vào phiên bản miễn 
+phí của API Gemini làm giảm tốc độ và đôi khi 
+gây lỗi dịch không sát nghĩa. Điều này dẫn đến 
+một số truy vấn bị diễn giải sai, gây ảnh hưởng 
+đến quá trình truy xuất và gợi ý.
+
+Dựa trên kết quả đạt được, một số hướng phát 
+triển khả thi bao gồm:
+
+\begin{itemize}
+    \item \textbf{Mở rộng và đa dạng hóa cơ sở 
+    dữ liệu món ăn}: bổ sung dữ liệu từ nhiều 
+    nền ẩm thực khác nhau (Á, Âu, Nam Á, Trung 
+    Đông) để tăng khả năng gợi ý đa dạng hơn, 
+    đáp ứng các thị trường người dùng khác nhau.
+    \item \textbf{Bổ sung dữ liệu dinh dưỡng 
+    chuyên sâu}: thêm các chỉ số quan trọng như 
+    vitamin, khoáng chất, chỉ số đường huyết (GI), 
+    thành phần vi chất để hỗ trợ các trường hợp 
+    yêu cầu phức tạp về sức khỏe.
+    \item \textbf{Nâng cấp mô-đun dịch và chuẩn 
+    hóa truy vấn}: giảm thiểu lỗi chuyển đổi 
+    ngôn ngữ bằng cách sử dụng mô hình 
+    dịch chuyên dụng để cải thiện độ chính 
+    xác truy vấn.
+    \item \textbf{Tăng cường cá nhân hóa}: lưu 
+    trữ sở thích dài hạn của người dùng (ví dụ 
+    mức độ cay, chế độ ăn, dị ứng, khẩu phần) 
+    ngay cả khi thay đổi phiên hội thoại; từ 
+    đó xây dựng hệ thống gợi ý món ăn mang tính 
+    cá nhân hóa sâu hơn.
+    \item \textbf{Tối ưu hóa tốc độ}: chuyển sang 
+    sử dụng phiên bản API trả phí hoặc mô hình 
+    open-source chạy cục bộ nhằm khắc phục giới 
+    hạn tốc độ và tránh tình trạng tắc nghẽn 
+    truy vấn.
+    \item \textbf{Tự động phân tích lỗi 
+    (self-evaluation)}: áp dụng các chỉ số như 
+    Precision@k, Recall@k hoặc nDCG@k để đánh 
+    giá chất lượng retrieval một cách định 
+    lượng và liên tục cải thiện pipeline.
+    \item \textbf{Xây dựng giao diện người dùng 
+    hoàn chỉnh}: tích hợp chatbot vào ứng dụng 
+    web/mobile giúp người dùng dễ dàng truy cập 
+    và tương tác, mở rộng hệ thống từ dạng thử 
+    nghiệm sang sản phẩm thực tế.
+\end{itemize}
+
+Tổng thể, hệ thống chatbot gợi ý món ăn đã chứng 
+minh tính khả thi và hiệu quả trong việc kết 
+hợp RAG, cơ sở dữ liệu món ăn và mô hình LLM. 
+Các kết quả đạt được cho thấy tiềm năng phát 
+triển thành một công cụ hỗ trợ dinh dưỡng và 
+ẩm thực thông minh, có khả năng phục vụ tốt 
+trong nhiều bối cảnh ứng dụng thực tế như tư 
+vấn thực đơn, gợi ý dinh dưỡng, hỗ trợ người 
+ăn kiêng hoặc người có yêu cầu sức khỏe đặc biệt.
 
 % % Tài liệu tham khảo
 % \chapter*{Tài liệu tham khảo}
@@ -1626,6 +1713,52 @@ Mặc dù còn hạn chế về độ phong phú của dữ liệu, hệ thống
 % Phụ lục (Tùy chọn)
 \appendix
 \chapter{Phụ lục}
-% [Thêm kết quả bổ sung, đoạn mã hoặc hướng dẫn sử dụng tại đây.]
+Để chạy các chương trình, cần thực hiện các bước sau:
+\section{Cài đặt môi trường}
+\begin{itemize}
+    \item Cài đặt Python 3.10 trở lên.
+    \item Tạo môi trường ảo (virtual environment):
+    \begin{verbatim}
+python -m venv venv
 
+source venv/bin/activate  # Linux/Mac
+venv\Scripts\activate     # Windows
+    \end{verbatim}
+    \item Cài đặt các thư viện cần thiết:
+    \begin{verbatim}
+pip install -r requirements.txt
+    \end{verbatim}
+\end{itemize}
+\section{Chạy chương trình}
+\subsection{Khai thác dữ liệu}
+\begin{verbatim}
+cd crawler
+
+# Thu thập Liên kết Danh mục
+python crawl_category_links.py
+
+# Thu thập Liên kết Công thức từ Danh mục
+python crawl_recipe_links_parallel.py
+
+# Thu thập Thông tin Công thức
+python crawl_recipe_infos_parallel.py
+
+cd ..
+\end{verbatim}
+
+\subsection{Tiền xử lý dữ liệu}
+\begin{verbatim}
+cd preprocessing
+
+python food_preprocessing.py
+
+cd ..
+\end{verbatim}
+
+\subsection{Chạy chatbot}
+\begin{verbatim}
+cd bot
+
+python main.py
+\end{verbatim}
 \end{document}
