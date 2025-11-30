@@ -7,6 +7,7 @@
 \usepackage[utf8]{vietnam}
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage{float}
 
 % Define degree symbol command to avoid undefined \degree
 \newcommand{\degree}{\ensuremath{^\circ}}
@@ -56,7 +57,7 @@
         \textbf{Học kỳ:} & Học kỳ 1, Năm học 2025-2026 \\
         \textbf{Trường:} & VNU-HUS (Đại học Quốc gia Hà Nội -- Trường Đại học Khoa học Tự nhiên) \\
         \textbf{Tên dự án:} & Chatbot Ẩm Thực \\
-        \textbf{Ngày nộp:} & {[Ngày nộp]} (ví dụ: 30/06/2025) \\
+        \textbf{Ngày nộp:} & 30/11/2025 \\
         \textbf{Báo cáo PDF:} & \href{https://github.com/HaianCao/FoodChatbot/blob/main/LaTeX%20Template/main-vi.pdf}{Báo cáo dự án Chatbot Ẩm Thực} \\
         \textbf{Slide thuyết trình:} & \href{[Slides Link]}{Liên kết tới slide thuyết trình trong kho GitHub} \\
         \textbf{Kho GitHub:} & \url{https://github.com/HaianCao/FoodChatbot}
@@ -224,9 +225,7 @@ thực, giải quyết hiệu quả bài toán truy xuất
 tri thức không cấu trúc quy mô lớn.
 
 % Chương 2: Phương pháp & Triển khai
-\chapter{Phương pháp \& Triển khai}
-
-\section{Phương pháp}
+\chapter{Phương pháp}
 
 Dự án chatbot ẩm thực được xây dựng dựa trên sự 
 kết hợp giữa mô hình ngôn ngữ lớn (Large Language 
@@ -239,7 +238,7 @@ tiếp cận tổng thể, cơ sở lý thuyết, kiến trúc
 thành phần, thuật toán chính và dữ liệu sử dụng 
 trong hệ thống.
 
-\subsection{Cách tiếp cận}
+\section{Phương hướng tiếp cận}
 
 Cách tiếp cận tổng thể của dự án dựa trên nguyên 
 tắc: kết hợp sức mạnh sinh ngôn ngữ của LLM 
@@ -330,9 +329,9 @@ dinh dưỡng, mà còn đưa ra gợi ý tùy chỉnh theo
 sở thích cá nhân, hạn chế ăn uống hoặc nguyên 
 liệu có sẵn của người dùng.
 
-\subsection{Cơ sở lý thuyết}
+\section{Cơ sở lý thuyết}
 
-\subsubsection{Mô hình ngôn ngữ lớn (Large 
+\subsection{Mô hình ngôn ngữ lớn (Large 
 Language Model -- LLM)}
 
 Hệ thống sử dụng mô hình Gemini, thuộc họ các 
@@ -531,6 +530,12 @@ y = \sum_{i \in \text{Top-k}(G(x))} G(x)_i \cdot E_i(x).
 trong khi vẫn duy trì dung lượng bộ nhớ 
 (capacity) của một mô hình lớn.
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{MOE.png}
+    \caption{Kiến trúc Mixture-of-Experts (MoE).\cite{moe}}
+\end{figure}
+
 \textbf{2. Grouped-Query Attention (GQA)\cite{gqa}:} 
 Để tối ưu hóa bộ nhớ KV-Cache trong quá trình 
 suy luận (inference), mô hình thay thế 
@@ -572,18 +577,16 @@ trong các khối FFN:
 \text{SwiGLU}(x, W, V, W_2) = (\text{Swish}(xW) \otimes (xV)) W_2.
 \]
 
-\subsubsection{Vector Database và Nhúng từ}
+\subsection{Vector Database và Nhúng từ}
 
 \paragraph{Ý tưởng nhúng từ}
 Nhúng từ là hàm ánh xạ \(f: \text{Text} \to 
 \mathbb{R}^d\) đưa một đoạn văn bản (ví dụ: 
 tên món, danh sách nguyên liệu, bước nấu) về 
 không gian vector \(d\)-chiều sao cho các văn 
-bản có ý nghĩa tương tự nằm gần nhau. ChromaDB cung cấp pipeline để 
-sinh nhúng từ cho từng văn bản và lưu trữ 
-chúng cùng metadata.
+bản có ý nghĩa tương tự nằm gần nhau.
 
-\paragraph{Cách cấu trúc dữ liệu}
+\paragraph{Các trường dữ liệu}
 Mỗi mục trong database gồm:
 \begin{itemize}
     \item \texttt{ids}: Khóa duy nhất cho mỗi document.
@@ -608,10 +611,9 @@ Mỗi mục trong database gồm:
     LLM.
 \end{itemize}
 
-\subsubsection{Cosine Similarity và các chỉ số 
-đánh giá tương đồng}
+\subsection{Độ tương đồng cosine}
 
-\paragraph{Định nghĩa cosine similarity\cite{nlp_book}}
+\paragraph{Định nghĩa độ tương đồng cosine\cite{nlp_book}}
 Với hai vector \(u, v \in \mathbb{R}^d\), độ 
 tương đồng cosine được tính:
 \[
@@ -634,8 +636,7 @@ nhất so với vector nhúng của truy vấn.
     khoảng 3–10).
 \end{itemize}
 
-\subsubsection{Kiến trúc Retrieval-Augmented 
-Generation (RAG)\cite{nlp_book}}
+\subsection{Kiến trúc Retrieval-Augmented Generation (RAG)\cite{nlp_book}}
 
 \paragraph{Nguyên lý tổng quát}
 
@@ -647,7 +648,7 @@ ra một câu hỏi, hệ thống không để mô hình LLM
 tự trả lời dựa trên trí nhớ nội tại, mà thay vào đó:
 \begin{enumerate}
     \item Truy xuất tri thức liên quan một cách 
-    có kiểm soát từ kho dữ liệu ẩm thực.
+    có kiểm soát từ cơ sở dữ liệu.
     \item Kết hợp tri thức đó vào prompt để 
     LLM sinh ra câu trả lời dựa trên thông 
     tin có thật.
@@ -670,6 +671,11 @@ sót do mô hình tự bịa (hallucination).
 
 Hai mô-đun hoạt động độc lập nhưng liên kết chặt 
 chẽ, đảm bảo luồng xử lý rõ ràng và dễ mở rộng.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{rag_architecture.png}
+    \caption{Kiến trúc Retrieval-Augmented Generation (RAG).\cite{nlp_book}}
+\end{figure}
 
 \paragraph{Lợi ích nổi bật của RAG}
 \begin{itemize}
@@ -690,7 +696,7 @@ Thực tế thường áp dụng chiến lược:
 \begin{enumerate}
     \item Lấy top-\(k\) đoạn liên quan.
     \item Nếu các đoạn dài, tóm tắt mỗi đoạn 
-    bằng một sentence ngắn (summary) trước khi 
+    bằng một câu ngắn (tóm tắt) trước khi 
     chèn vào prompt.
     \item Chèn metadata quan trọng (ví dụ: 
     nguồn, thời gian nấu, lượng calo).
@@ -699,58 +705,57 @@ Thực tế thường áp dụng chiến lược:
     [User Query]}.
 \end{enumerate}
 
-\subsection{Thuật toán tổng quát}
+\subsection{Quy trình tổng quát}
 
 Thuật toán chính của hệ thống được thiết kế xoay 
 quanh pipeline Retrieval-Augmented Generation (RAG), 
 kết hợp giữa khả năng suy luận ngôn ngữ của mô hình 
-Gemini và khả năng truy xuất tri thức theo ngữ nghĩa 
-từ ChromaDB. Pipeline thuật toán gồm các bước sau:
+sinh ngôn ngữ và khả năng truy xuất tri thức theo ngữ nghĩa 
+từ vector database. Pipeline thuật toán gồm các bước sau:
 
 \subsubsection{1. Nhận và chuẩn hoá truy vấn người dùng}
 
 \begin{itemize}
     \item Người dùng gửi câu hỏi bất kỳ liên quan 
-    đến món ăn, nguyên liệu hoặc gợi ý nấu nướng.
-    \item Truy vấn được đưa vào mô-đun sử dụng 
-    Gemini để đảm nhiệm việc:
+    đến chủ đề mà chatbot hỗ trợ.
+    \item Truy vấn được đưa vào mô-đun đảm nhiệm việc:
     \begin{itemize}
         \item Phát hiện ngôn ngữ đầu vào.
-        \item Dịch truy vấn sang tiếng Anh nếu cần 
+        \item Chuẩn hóa và loại bỏ nhiễu trong câu hỏi.
+        \item Dịch truy vấn sang ngôn ngữ phù hợp nếu cần 
         (để tương thích với dữ liệu embedding 
         trong DB).
-        \item Chuẩn hóa và loại bỏ nhiễu trong 
-        câu hỏi.
     \end{itemize}
 \end{itemize}
 
 \subsubsection{2. Sinh embedding cho truy vấn}
 \begin{itemize}
-    \item Truy vấn tiếng Anh sẽ được đưa qua API 
-    embedding của ChromaDB:
+    \item Truy vấn được đưa vào mô hình nhúng từ
+    để chuyển đổi thành vector biểu diễn:
     \[
         q = \text{Embed}(query)
     \]
-    \item Kết quả là vector biểu diễn độ dài cố 
-    định dùng để truy vấn vào cơ sở dữ liệu vector.
+    \item Kết quả là vector biểu diễn ngữ nghĩa 
+    có độ dài cố định, 
+    dùng để truy vấn vào cơ sở dữ liệu vector.
 \end{itemize}
 
-\subsubsection{3. Truy vấn ngữ nghĩa (Semantic Retrieval)}
+\subsubsection{3. Truy vấn ngữ nghĩa}
 \begin{itemize}
-    \item ChromaDB lưu các embedding của tài liệu 
+    \item Cơ sở dữ liệu vector lưu các embedding của tài liệu 
     ẩm thực.
     \item Hệ thống thực hiện tìm kiếm top-$k$ 
-    đoạn gần nhất:
+    văn bản tương đồng nhất:
     \[
-        \text{docs} = \text{ChromaDB.top\_k}(q, k)
+        \text{docs} = \text{VectorDB.top\_k}(q, k)
     \]
     \item Độ tương đồng được tính bằng cosine 
     similarity:
     \[
-        \text{sim}(q, d_i) = \frac{q \cdot d_i}{\|q\|\|d_i\|}
+        \text{cosine}(q, d_i) = \frac{q \cdot d_i}{\|q\|\|d_i\|}
     \]
     \item Các đoạn văn liên quan nhất được trả 
-    về kèm metadata: tên món, nguyên liệu, thời 
+    về kèm metadata ví dụ như tên món, nguyên liệu, thời 
     gian nấu, mô tả, v.v.
 \end{itemize}
 
@@ -767,20 +772,18 @@ từ ChromaDB. Pipeline thuật toán gồm các bước sau:
         P = [System\ Instructions] + [Retrieved\ Context\ C] + [User\ Query]
     \]
     \item Đây là giai đoạn quan trọng đảm bảo 
-    Gemini không sinh thông tin sai (hallucination).
+    mô hình sinh ngôn ngữ không sinh thông tin sai (hallucination).
 \end{itemize}
 
 \subsubsection{5. Sinh phản hồi (Answer Generation)}
 \begin{itemize}
-    \item Prompt hoàn chỉnh được gửi vào mô hình 
-    Gemini.
-    \item Gemini sinh câu trả lời bằng ngôn ngữ 
-    tự nhiên tiếng Anh, sau khi:
+    \item Prompt hoàn chỉnh được đưa vào mô hình 
+    sinh ngôn ngữ.
+    \item Mô hình sinh ngôn ngữ sinh câu trả 
+    lời bằng ngôn ngữ phù hợp với hệ thống, sau khi:
     \begin{itemize}
         \item Kết hợp tri thức từ context đã 
         truy xuất.
-        \item Giữ đúng ngôn ngữ đầu vào của 
-        người dùng.
         \item Tối ưu nội dung theo hướng hội 
         thoại và hữu ích.
     \end{itemize}
@@ -788,40 +791,9 @@ từ ChromaDB. Pipeline thuật toán gồm các bước sau:
     đúng ngôn ngữ của người dùng nếu cần.
 \end{itemize}
 
-\subsubsection{6. Pipeline tổng thể}
+\chapter{Triển khai}
 
-\begin{enumerate}
-    \item Nhận câu hỏi $Q$.
-    \item Chuẩn hoá và dịch về tiếng Anh: 
-    \[
-        Q' = \text{Normalize}(Q)
-    \]
-    \item Sinh embedding truy vấn: 
-    \[
-        v = \text{Embed}(Q')
-    \]
-    \item Truy xuất top-$k$ đoạn liên quan: 
-    \[
-        D = \text{Retrieve}(v, k)
-    \]
-    \item Ghép ngữ cảnh: 
-    \[
-        P = \text{ConstructPrompt}(D, Q)
-    \]
-    \item Gửi prompt vào Gemini: 
-    \[
-        A = \text{Gemini.generate}(P)
-    \]
-    \item Nếu ngôn ngữ đầu vào không phải 
-    tiếng Anh, dịch phản hồi về ngôn ngữ gốc.
-    \[
-        A' = \text{Translate}(A, \text{lang}(Q))
-    \]
-    \item Trả về phản hồi $A'$ cho người dùng.
-\end{enumerate}
-
-
-\subsection{Dữ liệu sử dụng}
+\section{Dữ liệu sử dụng}
 
 Dữ liệu cho hệ thống chatbot ẩm thực được thu 
 thập trực tiếp từ trang web 
@@ -832,7 +804,7 @@ JSON chứa đầy đủ các thành phần thông tin cần
 thiết phục vụ cho bước trích xuất tri thức và 
 tạo nhúng từ.
 
-\subsubsection{Cấu trúc dữ liệu thô}
+\subsection{Cấu trúc dữ liệu thô}
 
 Mỗi công thức sau khi khai thác được biểu diễn 
 dưới dạng một đối tượng JSON có cấu trúc thống 
@@ -842,7 +814,7 @@ nhất như sau:
     \item \textbf{URL}: đường dẫn tuyệt đối đến 
     trang công thức gốc.
     \item \textbf{Summary}: đoạn mô tả ngắn gọn 
-    về món ăn, thường do tác giả cung cấp.
+    về món ăn.
     \item \textbf{Metadata}: tập hợp thông tin 
     định lượng như thời gian sơ chế, thời gian 
     nấu, tổng thời gian và số khẩu phần.
@@ -859,7 +831,95 @@ nhất như sau:
     liệu phản ánh trải nghiệm thực tế.
 \end{itemize}
 
-\subsubsection{Lưu trữ và tiền xử lý}
+%-----------------------------------------------------------------------
+\section{Thu thập dữ liệu}
+
+Quá trình thu thập dữ liệu công thức nấu ăn cho 
+hệ thống \textbf{FoodChatbot} bao gồm ba giai 
+đoạn chính: 
+thu thập các link danh mục, thu thập link công
+thức chi tiết rồi từ đấy thu thập dữ liệu 
+chi tiết của từng công thức.
+
+\textbf{Công cụ chính:} Sử dụng Selenium để 
+tương tác với trang web động, kết hợp với 
+các kỹ thuật Chrome/undetected driver để 
+tránh bị chặn.
+
+\subsection*{Thu thập danh mục}
+\begin{itemize}
+    \item Thu thập toàn bộ link danh mục món ăn 
+    từ trang chủ.
+    \item Lọc các link trong danh sách cấm 
+    (blacklist) trước khi lưu lại.
+    \item Lưu kết quả vào các file tạm trong 
+    thư mục dữ liệu.
+\end{itemize}
+
+\subsection*{Thu thập link công thức chi tiết}
+\begin{itemize}
+    \item Thu thập từng trang category song song 
+    bằng cơ chế \textbf{đa tiến trình 
+    (multiprocessing)}.
+    \item Hỗ trợ tiếp tục thu thập từ trang 
+    hoặc URL đã dừng trước đó 
+    (\textbf{resume support}).
+    \item Trích xuất tất cả link công thức 
+    từ từng trang danh mục.
+    \item Dừng thu thập khi không còn link 
+    mới hoặc lỗi liên tiếp vượt quá giới hạn.
+    \item Lưu link theo từng trang nếu cấu 
+    hình bật để tránh mất dữ liệu.
+\end{itemize}
+
+\subsection*{Thu thập chi tiết từng công thức}
+\begin{itemize}
+    \item Mỗi URL công thức được thu thập và 
+    trích xuất các thông tin: mô tả, metadata, 
+    nguyên liệu, các bước chế biến, thông tin 
+    dinh dưỡng và bình luận.
+    \item Sử dụng \textbf{đa luồng 
+    (multithreading)} để xử lý nhiều URL cùng lúc.
+    \item Quản lý tiến trình bằng hàng đợi và 
+    cơ chế khóa để tránh xung đột dữ liệu.
+    \item Lưu từng công thức dưới dạng file 
+    JSON theo cấu trúc chuẩn trong thư mục dữ liệu.
+    \item Các biện pháp an toàn:
+    \begin{itemize}
+        \item Bỏ qua các trang đã thu thập.
+        \item Thử lại khi trình duyệt gặp lỗi.
+        \item Thời gian chờ ngẫu nhiên giữa 
+        các request để tránh bị chặn.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Tối ưu hóa hiệu năng}
+\begin{itemize}
+    \item Kết hợp đa tiến trình và đa luồng 
+    để tăng tốc độ xử lý.
+    \item Hỗ trợ tạm dừng từ URL hoặc trang cụ 
+    thể để không bị mất tiến trình.
+    \item Ghi nhật ký chi tiết để giám sát 
+    tiến trình và thống kê số link/công thức 
+    thu được.
+    \item Lưu dữ liệu theo từng trang/danh mục 
+    và sử dụng ghi file an toàn để giảm rủi ro 
+    mất dữ liệu.
+\end{itemize}
+
+
+%-----------------------------------------------------------------------
+\section{Chuẩn hóa và tiền xử lý dữ liệu}
+
+Dữ liệu thô sau khi thu thập từ các website 
+chứa nhiều lỗi định dạng, ký tự đặc biệt, biểu 
+tượng unicode, phân tách không đồng nhất và 
+các trường dữ liệu khác nhau. Quá trình tiền 
+xử lý sử dụng các kỹ thuật để làm sạch, 
+chuẩn hóa và cấu trúc dữ liệu trước khi lưu trữ 
+hoặc đưa vào pipeline RAG.
+
+\subsection{Tổng quan quá trình tiền xử lý}
 
 Sau khi dữ liệu thô được thu thập từ các trang 
 công thức, hệ thống thực hiện một quy trình 
@@ -911,96 +971,7 @@ sạch, chuẩn hóa và chuyển về cấu trúc nhất quán,
 giảm thiểu nhiễu, đồng thời giữ lại đầy đủ thông 
 tin quan trọng cho hệ thống RAG.
 
-\section{Triển khai}
-
-Phần này mô tả chi tiết toàn bộ quá trình triển khai hệ thống FoodChatbot, trong đó
-quy trình thu thập dữ liệu (crawling) và tiền xử lý (preprocessing) được đưa lên đầu tiên,
-vì đây là nền tảng tạo nên kho tri thức cho hệ thống RAG.
-
-%-----------------------------------------------------------------------
-\subsection{Thu thập dữ liệu}
-
-Quá trình thu thập dữ liệu công thức nấu ăn cho 
-hệ thống \textbf{FoodChatbot} bao gồm hai giai 
-đoạn chính: 
-thu thập các link danh mục và thu thập dữ liệu 
-chi tiết từ từng công thức.
-
-\subsubsection{Thu thập danh mục}
-\begin{itemize}
-    \item \textbf{Công nghệ:} Selenium kết hợp 
-    trình duyệt tự động (Chrome/undetected driver) 
-    để tương tác với trang web động.
-    \item Thu thập toàn bộ link danh mục món ăn 
-    từ trang chủ.
-    \item Lọc các link trong danh sách cấm 
-    (blacklist) trước khi lưu lại.
-    \item Lưu kết quả vào các file tạm trong 
-    thư mục dữ liệu.
-\end{itemize}
-
-\subsubsection{Thu thập link công thức chi tiết}
-\begin{itemize}
-    \item Thu thập từng trang category song song 
-    bằng cơ chế \textbf{đa tiến trình 
-    (multiprocessing)}.
-    \item Hỗ trợ tiếp tục thu thập từ trang 
-    hoặc URL đã dừng trước đó 
-    (\textbf{resume support}).
-    \item Trích xuất tất cả link công thức 
-    từ từng trang danh mục.
-    \item Dừng thu thập khi không còn link 
-    mới hoặc lỗi liên tiếp vượt quá giới hạn.
-    \item Lưu link theo từng trang nếu cấu 
-    hình bật để tránh mất dữ liệu.
-\end{itemize}
-
-\subsubsection{Thu thập chi tiết từng công thức}
-\begin{itemize}
-    \item Mỗi URL công thức được thu thập và 
-    trích xuất các thông tin: mô tả, metadata, 
-    nguyên liệu, các bước chế biến, thông tin 
-    dinh dưỡng và bình luận.
-    \item Sử dụng \textbf{đa luồng 
-    (multithreading)} để xử lý nhiều URL cùng lúc.
-    \item Quản lý tiến trình bằng hàng đợi và 
-    cơ chế khóa để tránh xung đột dữ liệu.
-    \item Lưu từng công thức dưới dạng file 
-    JSON theo cấu trúc chuẩn trong thư mục dữ liệu.
-    \item Các biện pháp an toàn:
-    \begin{itemize}
-        \item Bỏ qua các trang đã thu thập.
-        \item Thử lại khi trình duyệt gặp lỗi.
-        \item Thời gian chờ ngẫu nhiên giữa 
-        các request để tránh bị chặn.
-    \end{itemize}
-\end{itemize}
-
-\subsubsection{Tối ưu hóa hiệu năng}
-\begin{itemize}
-    \item Kết hợp đa tiến trình và đa luồng 
-    để tăng tốc độ xử lý.
-    \item Hỗ trợ tạm dừng từ URL hoặc trang cụ 
-    thể để không bị mất tiến trình.
-    \item Ghi nhật ký chi tiết để giám sát 
-    tiến trình và thống kê số link/công thức 
-    thu được.
-    \item Lưu dữ liệu theo từng trang/danh mục 
-    và sử dụng ghi file an toàn để giảm rủi ro 
-    mất dữ liệu.
-\end{itemize}
-
-
-%-----------------------------------------------------------------------
-\subsection{Chuẩn hóa và tiền xử lý dữ liệu}
-
-Dữ liệu thô sau khi thu thập từ các website 
-chứa nhiều lỗi định dạng, ký tự đặc biệt, biểu 
-tượng unicode, phân tách không đồng nhất và 
-các trường dữ liệu khác nhau. Quá trình tiền 
-xử lý sử dụng các kỹ thuật Python để làm sạch, 
-chuẩn hóa và cấu trúc dữ liệu trước khi lưu trữ 
-hoặc đưa vào pipeline RAG.
+\subsection{Chi tiết quá trình tiền xử lý}
 
 \subsubsection{Làm sạch dữ liệu văn bản}
 \begin{itemize}
@@ -1070,18 +1041,24 @@ cấu trúc JSON thống nhất, ví dụ:
 \end{verbatim}
 
 %=======================================================================
-\subsection{Vector Database: ChromaDB}
+\section{Vector Database: ChromaDB}
 
-ChromaDB được sử dụng để lưu trữ:
+ChromaDB được sử dụng để lưu trữ dữ liệu với mỗi
+công thức có cấu trúc như sau:
 
 \begin{itemize}
-    \item Embedding của các đoạn tài liệu.
-    \item Doc-text (nội dung).
+    \item ID duy nhất cho mỗi đoạn tài liệu.
+    \item Embedding của các đoạn tài liệu trong đó
+    vector được sinh từ mô hình nhúng từ mặc
+    định của ChromaDB \textbf{all-MiniLM-L6-v2},
+    mỗi vector có độ dài 384 chiều.
+    \item Nội dung văn bản (document) tóm tắt 
+    các trường chính.
     \item Metadata như: nguồn, thời gian nấu, 
     dinh dưỡng.
 \end{itemize}
 
-\subsubsection{Cấu trúc lưu trữ trong ChromaDB}
+\subsection*{Cấu trúc lưu trữ trong ChromaDB}
 \begin{verbatim}
 {
     "id": "recipe_001_chunk_01",
@@ -1099,14 +1076,13 @@ ChromaDB được sử dụng để lưu trữ:
 \end{verbatim}
 
 %=======================================================================
-\subsection{Retrieval-Augmented Generation (RAG)}
+\section{Retrieval-Augmented Generation (RAG)}
 
-\subsubsection{Thành phần chính}
+\subsection{Thành phần chính}
 
 \begin{itemize}
     \item \textbf{Embedding Generator:} tạo 
-    vector cho truy vấn và tài liệu (sử dụng
-    mặc định của ChromaDB).
+    vector cho truy vấn và tài liệu.
     \item \textbf{Retriever (ChromaDB):} tìm 
     kiếm cosine similarity.
     \item \textbf{Context Injection:} đưa các 
@@ -1116,27 +1092,55 @@ ChromaDB được sử dụng để lưu trữ:
     (Đầu - Cuối).
 \end{itemize}
 
-\subsubsection{Quy trình RAG chi tiết}
+\subsection{Quy trình RAG chi tiết}
 
 \begin{enumerate}
-    \item Nhận truy vấn đầu vào (đa ngôn ngữ).
+    \item Nhận truy vấn đầu vào (đa ngôn ngữ) $Q$.
     \item Chuẩn hoá truy vấn bằng Gemini (dịch 
     sang tiếng Anh nếu cần).
+    \[
+        Q' = \text{Normalize}(Q)
+    \]
     \item Lọc ra những từ khoá quan trọng thể hiện
-    sở thích, nguyên liệu, yêu cầu dinh dưỡng.
+    sở thích, nguyên liệu, yêu cầu dinh dưỡng hoặc
+    lưu ý về tình trạng sức khỏe.
+    \[
+        S = \text{Translate}(\text{ExtractPreferences}(Q'))
+    \]
+    \item Trích xuất các từ khóa lọc thông số dinh dưỡng
+    nâng cao (nếu có) từ truy vấn.
+    \[
+        F = \text{ExtractFilters}(Q')
+    \]
     \item Sinh embedding truy vấn.
-    \item Thực hiện tìm kiếm ngữ nghĩa trong ChromaDB.
-    \item Chọn top-$k$ đoạn liên quan nhất sắp xếp
+    \[
+        V = \text{Embed}(Q')
+    \]
+    \item Thực hiện tìm kiếm ngữ nghĩa trong ChromaDB để
+    chọn top-$k$ đoạn liên quan nhất sắp xếp
+    \[
+        D = \text{Retrieve}(V, F, k)
+    \]
     theo độ tương đồng từ cao đến thấp.
     \item Ghép prompt 
-    (ngữ cảnh truy vấn + ngữ cảnh sở thích + truy vấn người dùng).
-    \item LLM sinh phản hồi theo ngôn ngữ 
-    người dùng.
+    (ngữ cảnh + truy vấn người dùng).
+    \[
+        P = \text{ConstructPrompt}(D, Q')
+    \]
+    \item LLM sinh phản hồi theo tiếng Anh.
+    \[
+        A = \text{Gemini.generate}(P, S)
+    \]
+    \item Nếu ngôn ngữ đầu vào không phải 
+    tiếng Anh, dịch phản hồi về ngôn ngữ gốc.
+    \[
+        A' = \text{Translate}(A, \text{lang}(Q))
+    \]
     \item Gửi kết quả + nguồn trích dẫn về frontend.
 \end{enumerate}
 
 %=======================================================================
-\subsection{Triển khai Backend với Flask}
+\subsection{Triển khai Backend}
 
 Hệ thống backend của FoodChatbot được xây dựng 
 bằng Flask, đóng vai trò cầu nối giữa giao diện 
@@ -1241,15 +1245,321 @@ Giao diện chính gồm:
 
 Trong chương này, báo cáo trình bày kết quả đạt 
 được từ quá trình xây dựng và đánh giá hệ thống 
-chatbot gợi ý món ăn. Hệ thống được thiết kế 
-nhằm khai thác dữ liệu món ăn thu thập từ 
-nguồn \texttt{therecipecritic.com}, kết hợp với 
-kiến trúc xử lý ngôn ngữ tự nhiên đa ngôn ngữ 
-để tạo ra một chatbot có khả năng tương tác 
-tự nhiên, đưa ra gợi ý phù hợp với yêu cầu dinh 
-dưỡng và sở thích của người dùng.
+chatbot gợi ý món ăn.
 
-\section{Kết quả đạt được}
+\section{Phương pháp đánh giá}
+
+Mục tiêu của phần đánh giá là đánh giá cả về 
+trải nghiệm hội thoại và độ chính 
+xác nội dung của hệ thống chatbot trong hai 
+kịch bản chính: (1) hội thoại nhiều lượt 
+(multi-turn) và (2) trả lời một lượt (one-shot). 
+Đánh giá được thiết kế sao cho kết quả vừa phản 
+ánh cảm nhận người dùng vừa kiểm tra được mức 
+độ chính xác của mô hình dựa trên thông tin trong
+cơ sở dữ liệu.
+
+\subsection{Tổng quan thực nghiệm}
+\begin{itemize}
+    \item \textbf{Số phiên (sessions)}: 
+    30 phiên với multi-turn và 100 phiên với one-shot.
+    \item \textbf{Kịch bản multi-turn}: mỗi 
+    phiên gồm tối đa 10 lượt prompt từ người 
+    đánh giá đến chatbot; đánh giá được ghi 
+    lại ở mốc 2, 5 và 10 lượt.
+    \item \textbf{Kịch bản one-shot}: mỗi truy 
+    vấn độc lập (không có ngữ cảnh trước đó) 
+    được đưa vào chatbot một lần; lặp lại 100 
+    truy vấn để đánh giá tính ổn định và chính 
+    xác từ lượt đầu.
+    \item \textbf{Người đánh giá (raters)}: 
+    các đánh giá viên là người thật (nhóm kiểm 
+    thử nội bộ), thực hiện hội thoại và chấm 
+    điểm theo cảm nhận cá nhân.
+\end{itemize}
+
+\subsection{Quy trình đánh giá chi tiết}
+\begin{enumerate}
+    \item \textbf{Chuẩn bị prompt}: Người đánh
+    giá dựa trên dữ liệu thực tế đã thu thập để
+    thực hiện các kịch bản hội thoại và truy vấn.
+    \item \textbf{Hướng dẫn người đánh giá}: 
+    cung cấp ví dụ minh hoạ, nhấn mạnh:
+    \begin{itemize}
+        \item Khi chấm \textit{độ thiện cảm}, 
+        đánh giá viên cân nhắc tính thân thiện, 
+        rõ ràng, dễ đọc và phong cách hội thoại.
+        \item Khi chấm \textit{độ chính xác}, 
+        chỉ xét những thông tin có thể kiểm chứng 
+        trực tiếp từ cơ sở dữ liệu. Nếu chatbot đưa 
+        thông tin không có trong DB hoặc trả lời
+        không đúng trọng tâm thì tính 
+        là không chính xác.
+    \end{itemize}
+    \item \textbf{Tiến hành phiên multi-turn}:
+    \begin{itemize}
+        \item Mỗi phiên, đánh giá viên thực hiện 
+        tối đa 10 lượt prompt theo kịch bản hoặc 
+        tuỳ biến (tối đa 5 truy vấn, còn lại là
+        hỏi đáp).
+        \item Sau lượt 2, 5, 10, đánh giá viên 
+        chấm \textit{độ thiện cảm} (thang 1--10) 
+        và \textit{độ chính xác tích lũy} (thang 1--10
+        theo cảm nhận kết quả truy vấn đúng).
+    \end{itemize}
+    \item \textbf{Tiến hành kịch bản one-shot}:
+    \begin{itemize}
+        \item Với 100 truy vấn one-shot, hệ thống 
+        trả lời một lần cho mỗi truy vấn; đánh 
+        giá viên gán điểm số (thang 1--10) 
+        cho từng phản hồi dựa trên 
+        dữ liệu trong DB.
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Định nghĩa chỉ số}
+\paragraph{Độ thiện cảm tích lũy (Cumulative Likability)}
+\begin{itemize}
+    \item Thang điểm: 1--10 
+    (1 = rất khó chịu, 10 = rất thoải mái).
+    \item Đánh giá dựa trên: sự tự nhiên 
+    của văn phong, lịch sự và thân thiện, 
+    rõ ràng trong cách trình bày.
+    \item Với mỗi phiên $j$ và tại mốc $n$ lượt,
+    định nghĩa:
+    \[
+    L_{j,n} = \text{điểm thiện cảm ở phiên } j \text{ gán sau lượt } n.
+    \]
+    \item Tổng hợp qua $S$ phiên, trung bình độ thiện cảm 
+    tích lũy tại mốc $n$ là:
+    \[
+    \bar{L}_n = \frac{1}{S}\sum_{j=1}^{S} L_{j,n}.
+    \]
+    \item Độ lệch chuẩn của độ thiện cảm tại mốc $n$ là:
+    \[
+    \sigma_{L_n} = \sqrt{\frac{1}{S-1}\sum_{j=1}^{S}(L_{j,n} - \bar{L}_n)^2}.
+    \]
+\end{itemize}
+
+\paragraph{Độ chính xác tích lũy (Cumulative accuracy)}
+\begin{itemize}
+    \item Thang điểm: 1--10 
+    (1 = sai hoàn toàn, 10 = chính xác tuyệt đối).
+    \item Đánh giá dựa trên: độ chính xác của thông
+    tin trả lời so với dữ liệu trong cơ sở dữ liệu.
+    Đồng thời xét đến yếu tố đầy đủ, trọng tâm 
+    và không bịa đặt. Khả năng suy luận (cho phép
+    vượt ra ngoài phạm vi cơ sở dữ liệu nhẹ) để 
+    tạo ra thông tin
+    phù hợp với cá nhân người dùng cũng được xét đến. 
+    \item Với mỗi phiên $j$ và tại mốc $n$ lượt, 
+    định nghĩa:
+    \[
+    \text{acc}_{j,n} = \frac{\text{Tổng số câu trả lời đúng trong các lượt }1..n}{n}.
+    \]
+    \item Tổng hợp qua $S$ phiên, trung bình độ chính xác 
+    tích lũy tại mốc $n$ là:
+    \[
+    \text{Acc}_n = \frac{1}{S}\sum_{j=1}^{S} \text{acc}_{j,n}.
+    \]
+    \item Độ lệch chuẩn của độ chính xác tại mốc $n$ là:
+    \[
+    \sigma_{\text{Acc}_n} = \sqrt{\frac{1}{S-1}\sum_{j=1}^{S}(\text{acc}_{j,n} - \text{Acc}_n)^2}.
+    \]
+    \item Trong đó, "câu trả lời đúng" được hiểu là: nội 
+    dung trả lời khớp (hoặc bao gồm) thông tin 
+    xác thực có trong cơ sở dữ liệu; đối với câu hỏi yêu 
+    cầu gợi ý danh sách, mỗi item gợi ý được 
+    kiểm tra riêng. Và "câu trả lời sai" được hiểu là
+    nội dung không có trong DB, sai trọng tâm
+    yêu cầu, bịa đặt thông tin, hoặc suy luận sai
+    dẫn đến cung cấp thông tin không hợp lý, gây hại
+    cho người dùng.
+\end{itemize}
+
+\paragraph{Độ chính xác one-shot}
+\begin{itemize}
+    \item Với $M=100$ truy vấn độc lập, mỗi truy 
+    vấn $i$ được đánh giá độ chính xác dựa trên
+    thang điểm 1--10.  
+    \[
+    \text{OneShotAcc} = \frac{1}{M}\sum_{i=1}^{M} c_i.
+    \]
+    \item Độ lệch chuẩn của độ chính xác one-shot là:
+    \[
+    \sigma_{\text{OneShotAcc}} = \sqrt{\frac{1}{M-1}\sum_{i=1}^{M}(c_i - \text{OneShotAcc})^2}.
+    \]
+    \item Quy tắc quyết định đúng/sai tương tự như trên.
+\end{itemize}
+
+\section{Kết quả}
+
+\noindent Dựa trên 30 phiên multi-turn và 100 truy vấn one-shot, thu được:
+
+\begin{itemize}
+    \item \textbf{Độ thiện cảm và độ chính xác 
+    tích lũy theo mốc hội thoại theo multi-turn}:
+\begin{table}[H]
+\centering
+\caption{Kết quả đánh giá theo từng mốc hội thoại}
+\begin{tabular}{|c|cc|cc|}
+\hline
+\textbf{Mốc} & 
+\multicolumn{2}{c|}{\textbf{Độ thiện cảm}} & 
+\multicolumn{2}{c|}{\textbf{Độ chính xác}} \\ \hline
+ & $\bar{L}_n$ & $\sigma_{L_n}$ & $\text{Acc}_n$ & $\sigma_{\text{Acc}_n}$ \\ \hline
+2  & 8.7667 & 0.3278 & 8.6583 & 0.6581 \\ \hline
+5 & 8.6917 & 0.2516 & 8.1833 & 0.4777 \\ \hline
+10 & 9.0167 & 0.2702 & 8.5667 & 0.3212 \\ \hline
+\end{tabular}
+\label{tab:multi-turn-eval-detail}
+\end{table}
+
+    \item \textbf{Độ chính xác one-shot}:  
+    \[
+    \text{OneShotAcc} = 7.6825
+    \]
+    \[
+    \sigma_{\text{OneShotAcc}} = 0.7478
+    \]
+\end{itemize}
+
+\subsection*{Phân tích chi tiết kết quả}
+
+\paragraph{1. Xu hướng thay đổi theo số lượt hội 
+thoại}
+
+Dựa trên kết quả ở \ref{tab:multi-turn-eval-detail}, 
+có thể nhận thấy hai xu hướng khác biệt giữa hai 
+chỉ số đánh giá:
+
+\begin{itemize}
+    \item \textbf{Độ thiện cảm} ($\bar{L}_n$) 
+    tăng đều qua các mốc, từ 8.7667 ở mốc 2 lên 
+    8.6917 ở mốc 5 và đạt 9.0167 ở mốc 10.  
+    Điều này cho thấy khi hội thoại kéo dài, 
+    chatbot tạo ra cảm giác tự nhiên và thân
+     thiện hơn với người dùng. Lượng ngữ cảnh 
+     tích lũy giúp hệ thống duy trì phong cách 
+     trả lời ổn định và phù hợp với kỳ vọng 
+     của người dùng.
+
+    \item \textbf{Độ chính xác} ($\text{Acc}_n$) 
+    lại thể hiện xu hướng không tăng tuyến tính:  
+    \[
+    8.6583\ (\text{mốc 2}) \rightarrow 8.1833\ (\text{mốc 5}) \rightarrow 8.5667\ (\text{mốc 10})
+    \]
+    Kết quả này cho thấy độ chính xác 
+    giảm rõ rệt tại mốc 5 nhưng tăng trở lại ở 
+    mốc 10, dù vẫn chưa bằng mức ban đầu (mốc 2).  
+    Xu hướng dao động này phản ánh rằng hiệu 
+    quả truy vấn của hệ thống phụ thuộc mạnh 
+    vào chất lượng và mức độ rõ ràng của ngữ 
+    cảnh hội thoại.
+\end{itemize}
+
+\paragraph{Giải thích chi tiết cho xu hướng này}
+
+\begin{itemize}
+    \item \textbf{Ngữ cảnh phức tạp có thể gây 
+    nhiễu retrieval}:  
+    Khi số lượt hội thoại tăng, người dùng có 
+    xu hướng mô tả dài hơn, chứa nhiều tham 
+    chiếu hoặc điều kiện ràng buộc.  
+    Tại mốc 5, lượng ngữ cảnh chưa đủ ổn định 
+    nhưng lại đủ dài để tạo nhiễu, khiến module 
+    rewrite và retrieval hoạt động kém tối ưu.
+
+    \item \textbf{Hiệu ứng tích lũy ngữ cảnh ở 
+    mốc 10}:  
+    Tại mốc 10, thông tin đã được ổn định và làm 
+    rõ. Chatbot có thể sử dụng ngữ cảnh để rút 
+    ra mục đích người dùng chính xác hơn, nhờ 
+    đó điểm chính xác tăng trở lại.
+
+    \item \textbf{Độ thiện cảm tăng nhờ khả năng 
+    thích ứng phong cách hội thoại}:  
+    Các mô hình LLM thường tối ưu tốt trong việc 
+    duy trì phong cách giao tiếp nhất quán. 
+    Khi lượng ngữ cảnh tăng, mô hình có thể tạo 
+    ra các câu trả lời tự nhiên, mềm mại và phù 
+    hợp hơn với phong cách người dùng, dẫn đến 
+    điểm thiện cảm tăng đều.
+
+    \item \textbf{Dữ liệu và cấu trúc DB giới 
+    hạn độ chính xác tuyệt đối}:  
+    Nếu người dùng yêu cầu các thông tin không 
+    có sẵn trong DB hoặc đặt câu hỏi với cấu 
+    trúc không điển hình, độ chính xác sẽ bị 
+    giảm. Điều này ảnh hưởng rõ nhất ở mốc 5.
+\end{itemize}
+
+\paragraph{2. So sánh One-shot và Multi-turn}
+
+One-shot accuracy được ghi nhận là:
+\[
+\text{OneShotAcc} = 7.6825, \qquad \sigma_{\text{OneShotAcc}} = 0.7478
+\]
+
+Kết quả này thấp hơn toàn bộ các mốc multi-turn, 
+bao gồm cả mốc thấp nhất (mốc 5).  
+Điều này có thể giải thích bởi:
+
+\begin{itemize}
+    \item \textbf{Thiếu ngữ cảnh}: one-shot yêu 
+    cầu hệ thống phải hiểu đúng ý ngay lập tức, 
+    trong khi nhiều truy vấn tự nhiên của người 
+    dùng cần được làm rõ hoặc viết lại qua vài 
+    lượt.
+    \item \textbf{Khó giải quyết các tham chiếu 
+    mơ hồ}: các truy vấn kiểu "món đó", "cách 
+    làm kia" không thể được xác định trong 
+    one-shot.
+    \item \textbf{Semantic search không có hỗ 
+    trợ từ rewrite hay history}: điểm truy vấn 
+    embedding kém dẫn đến retrieval không chính 
+    xác.
+\end{itemize}
+
+\paragraph{3. Phân tích lỗi (Error Analysis)}
+
+Dựa trên quan sát của 100 phiên thử nghiệm, 
+các lỗi xuất hiện có thể được phân loại thành 
+các nhóm:
+
+\begin{enumerate}
+    \item \textbf{Thiếu không tin}:  
+    DB không chứa trường thông tin mà người 
+    dùng yêu cầu (ví dụ: nutrition details, 
+    time breakdown), dẫn đến việc chatbot trả 
+    lời thiếu hoặc không trả lời được.
+
+    \item \textbf{Dịch sai / không sát nghĩa}:  
+    Quá trình dịch (nếu có) — từ tiếng Việt sang 
+    tiếng Anh để phục vụ retrieval — đôi khi 
+    làm mất sắc thái ý nghĩa, gây sai truy vấn.
+
+    \item \textbf{Giải thích filter sai}:  
+    Module sinh filter 
+    (generate\_chromadb\_filter) đôi khi tạo 
+    cú pháp sai hoặc hiểu nhầm ý, dẫn 
+    đến trả về sai các món cần lọc.
+
+    \item \textbf{Trả lời không đầy đủ}:  
+    Chatbot chỉ trả lời một phần — thường 
+    gặp khi yêu cầu liệt kê danh sách dài 
+    (step-by-step recipe, tất cả nguyên liệu, 
+    toàn bộ công thức).
+
+    \item \textbf{Ảo giác (ít gặp)}:  
+    Khi ngữ cảnh không đủ rõ ràng hoặc retrieval 
+    không mang lại tài liệu phù hợp, mô hình 
+    có thể tự điền thêm thông tin ngoài DB. 
+    Tuy nhiên, tần suất thấp nhờ prompt thiết 
+    kế chặt chẽ.
+\end{enumerate}
+
+\section{Đánh giá kết quả}
 
 \subsection{Khả năng hiểu và xử lý đa ngôn ngữ}
 
@@ -1419,195 +1729,8 @@ một số hạn chế như sau:
     thống trả lời “thiếu thông tin”.
 \end{itemize}
 
-\subsection{Phương pháp đánh giá}
-
-Mục tiêu của phần đánh giá là đánh giá cả về 
-trải nghiệm hội thoại và độ chính 
-xác nội dung của hệ thống chatbot trong hai 
-kịch bản chính: (1) hội thoại nhiều lượt 
-(multi-turn) và (2) trả lời một lượt (one-shot). 
-Đánh giá được thiết kế sao cho kết quả vừa phản 
-ánh cảm nhận người dùng vừa kiểm tra được mức 
-độ dựa vào dữ liệu của mô hình.
-
-\subsubsection{Tổng quan thí nghiệm}
-\begin{itemize}
-    \item \textbf{Số phiên (sessions)}: 
-    30 phiên với multi-turn và 100 phiên với one-shot.
-    \item \textbf{Kịch bản multi-turn}: mỗi 
-    phiên gồm tối đa 15 lượt prompt từ người 
-    đánh giá đến chatbot; đánh giá được ghi 
-    lại ở mốc 5, 10 và 15 lượt.
-    \item \textbf{Kịch bản one-shot}: mỗi truy 
-    vấn độc lập (không có ngữ cảnh trước đó) 
-    được đưa vào chatbot một lần; lặp lại 100 
-    truy vấn để đánh giá tính ổn định và chính 
-    xác từ lượt đầu.
-    \item \textbf{Người đánh giá (raters)}: 
-    các đánh giá viên là người thật (nhóm kiểm 
-    thử nội bộ), thực hiện hội thoại và chấm 
-    điểm theo cảm nhận cá nhân.
-\end{itemize}
-
-\subsubsection{Quy trình đánh giá chi tiết}
-\begin{enumerate}
-    \item \textbf{Chuẩn bị prompt}: Người đánh
-    giá dựa trên dữ liệu thực tế đã thu thập để
-    thực hiện các kịch bản hội thoại và truy vấn.
-    \item \textbf{Hướng dẫn người đánh giá}: 
-    cung cấp ví dụ minh hoạ, nhấn mạnh:
-    \begin{itemize}
-        \item Khi chấm \textit{độ thiện cảm}, 
-        đánh giá viên cân nhắc tính thân thiện, 
-        rõ ràng, dễ đọc và phong cách hội thoại.
-        \item Khi chấm \textit{độ chính xác}, 
-        chỉ xét những thông tin có thể kiểm chứng 
-        trực tiếp từ cơ sở dữ liệu. Nếu chatbot đưa 
-        thông tin không có trong DB hoặc trả lời
-        không đúng trọng tâm thì tính 
-        là không chính xác.
-    \end{itemize}
-    \item \textbf{Tiến hành phiên multi-turn}:
-    \begin{itemize}
-        \item Mỗi phiên, đánh giá viên thực hiện 
-        tối đa 15 lượt prompt theo kịch bản hoặc 
-        tuỳ biến.
-        \item Sau lượt 5, 10, 15, đánh giá viên 
-        chấm \textit{độ thiện cảm} (thang 1--10) 
-        và \textit{độ chính xác tích lũy}.
-    \end{itemize}
-    \item \textbf{Tiến hành kịch bản one-shot}:
-    \begin{itemize}
-        \item Với 100 truy vấn one-shot, hệ thống 
-        trả lời một lần cho mỗi truy vấn; đánh 
-        giá viên gán nhãn chính xác / không 
-        chính xác cho từng phản hồi dựa trên 
-        dữ liệu trong DB.
-    \end{itemize}
-\end{enumerate}
-
-\subsubsection{Định nghĩa chỉ số}
-\paragraph{Độ thiện cảm (Likability)}
-\begin{itemize}
-    \item Thang điểm: 1--10 
-    (1 = rất khó chịu / vô dụng, 10 = rất thân 
-    thiện / cực kỳ hữu ích).
-    \item Đánh giá dựa trên: sự tự nhiên 
-    của văn phong, lịch sự và thân thiện, 
-    rõ ràng trong cách trình bày, 
-    tốc độ phản hồi cảm nhận.
-    \item Kết quả báo cáo là giá trị trung bình 
-    $\bar{L}_n$ trên $S$ phiên ở mốc $n$ lượt, 
-    với $n \in \{5,10,15\}$.
-\end{itemize}
-
-\paragraph{Độ chính xác tích lũy (Cumulative accuracy)}
-\begin{itemize}
-    \item Với mỗi phiên $j$ và tại mốc $n$ lượt, 
-    định nghĩa:
-    \[
-    \text{acc}_{j,n} = \frac{\text{\# câu trả lời đúng trong các lượt }1..n}{n}.
-    \]
-    \item Tổng hợp qua $S$ phiên, độ chính xác 
-    tích lũy tại mốc $n$ là:
-    \[
-    \text{Acc}_n = \frac{1}{S}\sum_{j=1}^{S} \text{acc}_{j,n}.
-    \]
-    \item "Câu trả lời đúng" được hiểu là: nội 
-    dung trả lời khớp (hoặc bao gồm) thông tin 
-    xác thực có trong cơ sở dữ liệu; đối với câu hỏi yêu 
-    cầu gợi ý danh sách, mỗi item gợi ý được 
-    kiểm tra riêng. "Câu trả lời sai" được hiểu là
-    nội dung không có trong DB, sai trọng tâm
-    yêu cầu, hoặc bịa đặt thông tin.
-\end{itemize}
-
-\paragraph{Độ chính xác one-shot}
-\begin{itemize}
-    \item Với $M=100$ truy vấn độc lập, mỗi truy vấn $i$ có nhãn $c_i\in\{0,1\}$ (0 = sai, 1 = đúng).  
-    \[
-    \text{OneShotAcc} = \frac{1}{M}\sum_{i=1}^{M} c_i.
-    \]
-    \item Kết quả báo cáo bằng phần tỷ lệ phần trăm.
-\end{itemize}
-
-\subsubsection{Thuật toán đánh giá thống kê}
-\begin{itemize}
-    \item \textbf{Mean \& Std}: với mỗi chỉ số (likability, Acc\_n, OneShotAcc) tính mean ($\bar{x}$) và độ lệch chuẩn ($\sigma$):
-    \[
-    \bar{x}=\frac{1}{N}\sum_{i} x_i,\qquad
-    \sigma = \sqrt{\frac{1}{N-1}\sum_{i}(x_i-\bar{x})^2}
-    \]
-\end{itemize}
-
-\subsection{Kết quả định lượng (tổng hợp)}
-
-\noindent Dựa trên 100 phiên multi-turn và 100 truy vấn one-shot, thu được:
-
-\begin{itemize}
-    \item \textbf{Độ thiện cảm (mean)}:  
-    \[
-    \bar{L}_5 = 7.3,\quad \bar{L}_{10}=7.8,\quad \bar{L}_{15}=8.2.
-    \]
-    \item \textbf{Độ chính xác tích lũy}:  
-    \[
-    \text{Acc}_5 = 8.2,\quad \text{Acc}_{10}=9.3,\quad \text{Acc}_{15}=9.7.
-    \]
-    \item \textbf{Độ chính xác one-shot}:  
-    \[
-    \text{OneShotAcc} = 0.76 \quad(76\% \text{ hoặc } 7.6/10).
-    \]
-\end{itemize}
-
-\subsection{Phân tích chi tiết kết quả}
-
-\paragraph{1. Tăng hiệu năng theo lượt hội thoại}  
-Kết quả cho thấy sự cải thiện rõ rệt về cả độ thiện cảm và độ chính xác khi chuyển từ 5 → 10 → 15 lượt. Giải thích khả dĩ:
-
-\begin{itemize}
-    \item \textbf{Viết lại và khắc phục tham chiếu}: sau vài lượt, hệ thống (qua module rewrite) có ngữ cảnh đủ để làm rõ tham chiếu mơ hồ (ví dụ: "món đó", "cái kia"), giúp truy vấn chính xác hơn.
-    \item \textbf{Prompt có điều kiện}: chatbot có thể "tối ưu" prompt theo phong cách hội thoại hiện tại (ví dụ người dùng thích ngắn gọn hay chi tiết) — làm tăng cảm nhận thiện cảm.
-    \item \textbf{Tăng tiến}: nhiều lượt giúp hệ thống thu thập thêm thông tin liên quan (user preferences, dietary constraints) làm chất lượng retrieval tốt hơn.
-\end{itemize}
-
-\paragraph{2. One-shot thấp hơn multi-turn}  
-One-shot accuracy (76\%) thấp hơn Acc\_15 (97\%) vì:
-
-\begin{itemize}
-    \item Không có ngữ cảnh hội thoại để giải quyết mơ hồ.
-    \item Một số truy vấn cần rewrite (ví dụ: "cái kia" không thể xác định).
-    \item Dịch ngôn ngữ (nếu có) có thể làm mất một số sắc thái dẫn đến truy vấn không khớp hoàn toàn với DB.
-\end{itemize}
-
-\paragraph{3. Phân loại lỗi (error analysis)}  
-Tổng hợp các lỗi phổ biến từ 100 phiên được chia thành các nhóm chính sau:
-
-\begin{enumerate}
-    \item \textbf{Missing data / Omission}: DB không có thông tin cần thiết (ví dụ: thiếu nutrition field) → chatbot báo "Không có" hoặc trả lời không đầy đủ.
-    \item \textbf{Translation mismatch}: bản dịch truy vấn sang tiếng Anh không sát nghĩa → semantic search trả về kết quả không liên quan.
-    \item \textbf{Filter misinterpretation}: LLM sinh filter (generate\_chromadb\_filter) sai cú pháp hoặc sai ý (ví dụ: nhầm giữa \texttt{calories} và \texttt{calories per serving}).
-    \item \textbf{Partial answer}: chatbot trả lời một phần (ví dụ: chỉ liệt kê vài bước khi người dùng yêu cầu toàn bộ công thức).
-    \item \textbf{Hallucination (ít gặp)}: trong một vài trường hợp hiếm, model thêm kiến thức ngoài DB — tuy được hạn chế bằng prompt nhưng vẫn có thể xảy ra khi context không rõ ràng.
-\end{enumerate}
-
-\section{Đánh giá kết quả}
-
-Kết quả cho thấy hệ thống chatbot đã đạt được:
-
-\begin{itemize}
-    \item Khả năng hiểu yêu cầu người dùng trong 
-    nhiều ngôn ngữ.
-    \item Gợi ý món ăn chính xác và phù hợp với nhu cầu sức khỏe.
-    \item Giảm thiểu ảo giác nhờ phụ thuộc vào cơ sở dữ liệu đã xác thực.
-    \item Tương tác thân thiện và chất lượng hội thoại cải thiện theo thời gian.
-\end{itemize}
-
-Mặc dù còn hạn chế về độ phong phú của dữ liệu, hệ thống đã chứng minh hiệu quả rõ rệt và hoàn toàn có thể mở rộng khi bổ sung thêm dữ liệu món ăn đa dạng hơn trong tương lai.
-
 % Chương 4: Kết luận
 \chapter{Kết luận}
-
-\section{Kết luận \& Hướng phát triển}
 
 Trong báo cáo này, hệ thống chatbot gợi ý món ăn 
 đã được xây dựng dựa trên kiến trúc 
@@ -1708,6 +1831,8 @@ vấn thực đơn, gợi ý dinh dưỡng, hỗ trợ người
 \bibitem{gemini_1.5} Google Research, ``Gemini 1.5 Technical Report,'' \doi{10.48550/arXiv.2403.05530}
 \bibitem{gemini_2.5} Google Research, ``Gemini 2.5 Technical Report,'' \doi{10.48550/arXiv.2507.06261}
 \bibitem{gqa} Google Research, ``GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints,'' \doi{10.48550/arXiv.2305.13245}
+\bibitem{moe} Omar Sanseviero, Lewis Tunstall, Philipp Schmid,
+Sourab Mangrulkar, Younes Belkada and Pedro Cuenca, ``Mixture of Experts Explained,'' \url{https://huggingface.co/blog/moe}
 \end{thebibliography}
 
 % Phụ lục (Tùy chọn)

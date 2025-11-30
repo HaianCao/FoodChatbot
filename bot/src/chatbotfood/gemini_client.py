@@ -21,51 +21,6 @@ from .chroma_manager import db_manager
 
 class GeminiClient:
 
-    def extract_user_preferences(self, user_query: str, conversation_history: list = None) -> dict:
-        """Extract user preferences/goals from query and conversation context using Gemini.
-        Uses a prompt to instruct Gemini to return a structured JSON object summarizing
-        dietary goals, preferred/avoided ingredients, cuisine types, nutrition targets, etc.
-        Args:
-            user_query: The user's current query (any language).
-            conversation_history: List of recent message dicts (role/text), can be empty.
-        Returns:
-            Dictionary with keys: dietary_goals, preferred_ingredients, avoided_ingredients,
-            cuisine_types, nutrition_targets, other. All values are lists.
-        """
-        # Build conversation context as text
-        context_text = "\n".join([
-            f"User: {msg['text']}" if msg['role'] == 'user' else f"Assistant: {msg['text']}"
-            for msg in (conversation_history or [])
-        ])
-        prompt = prompts.get_preference_extraction_prompt(user_query, context_text)
-        try:
-            response = self.client.models.generate_content(
-                model=self.DEFAULT_MODEL,
-                contents=[
-                    types.Content(
-                        role="user",
-                        parts=[types.Part.from_text(text=prompt)]
-                    )
-                ]
-            )
-            # Remove markdown code block if present
-            raw = response.text.strip()
-            if raw.startswith('```json'):
-                raw = raw[7:]
-            if raw.startswith('```'):
-                raw = raw[3:]
-            if raw.endswith('```'):
-                raw = raw[:-3]
-            prefs = json.loads(raw)
-            # Ensure all expected keys exist and are lists
-            keys = ["dietary_goals", "preferred_ingredients", "avoided_ingredients", "cuisine_types", "nutrition_targets", "other"]
-            for k in keys:
-                if k not in prefs or not isinstance(prefs[k], list):
-                    prefs[k] = []
-            return prefs
-        except Exception as e:
-            print(f"⚠️  Preference extraction failed: {e}. Returning empty preferences.")
-            return {k: [] for k in ["dietary_goals", "preferred_ingredients", "avoided_ingredients", "cuisine_types", "nutrition_targets", "other"]}
     """Client for interacting with Google's Gemini API with RAG capabilities.
     
     This class handles all interactions with Google's Gemini AI models,
@@ -331,7 +286,64 @@ class GeminiClient:
         except Exception as e:
             print(f"⚠️  Query rewrite failed: {e}. Using original query.")
             return user_query
-    
+
+    def extract_user_preferences(self, user_query: str, conversation_history: list = None, translate_to_english: bool = True) -> dict:
+        """Extract user preferences/goals from query and conversation context using Gemini.
+        After extraction, auto-translate all preferences to English if needed.
+        Args:
+            user_query: The user's current query (any language).
+            conversation_history: List of recent message dicts (role/text), can be empty.
+            translate_to_english: If True, translate all extracted preferences to English.
+        Returns:
+            Dictionary with keys: dietary_goals, preferred_ingredients, avoided_ingredients,
+            cuisine_types, nutrition_targets, other. All values are lists (in English if requested).
+        """
+        # Build conversation context as text
+        context_text = "\n".join([
+            f"User: {msg['text']}" if msg['role'] == 'user' else f"Assistant: {msg['text']}"
+            for msg in (conversation_history or [])
+        ])
+        prompt = prompts.get_preference_extraction_prompt(user_query, context_text)
+        try:
+            response = self.client.models.generate_content(
+                model=self.DEFAULT_MODEL,
+                contents=[
+                    types.Content(
+                        role="user",
+                        parts=[types.Part.from_text(text=prompt)]
+                    )
+                ]
+            )
+            # Remove markdown code block if present
+            raw = response.text.strip()
+            if raw.startswith('```json'):
+                raw = raw[7:]
+            if raw.startswith('```'):
+                raw = raw[3:]
+            if raw.endswith('```'):
+                raw = raw[:-3]
+            prefs = json.loads(raw)
+            # Ensure all expected keys exist and are lists
+            keys = ["dietary_goals", "preferred_ingredients", "avoided_ingredients", "cuisine_types", "nutrition_targets", "other"]
+            for k in keys:
+                if k not in prefs or not isinstance(prefs[k], list):
+                    prefs[k] = []
+
+            # Auto-translate all preferences to English if needed
+            if translate_to_english:
+                for k in keys:
+                    translated_list = []
+                    for item in prefs[k]:
+                        # Only translate if not empty and not already English (simple heuristic)
+                        if item:
+                            eng, lang = self.translate_to_english(item)
+                            translated_list.append(eng)
+                    prefs[k] = translated_list
+            return prefs
+        except Exception as e:
+            print(f"⚠️  Preference extraction failed: {e}. Returning empty preferences.")
+            return {k: [] for k in ["dietary_goals", "preferred_ingredients", "avoided_ingredients", "cuisine_types", "nutrition_targets", "other"]}
+            
     def generate_chromadb_filter(self, user_query: str) -> Dict[str, Any]:
         """Generate structured ChromaDB filter from natural language query.
         

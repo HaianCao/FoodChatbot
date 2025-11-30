@@ -189,6 +189,7 @@ class Chatbot:
         preferences_text = preferences_text.strip()
 
         system_instruction = f"""You are a friendly and approachable culinary assistant. 
+ingredient constraints, dislikes, and habitual cooking patterns.
 Your tone is warm, polite, and suitable for everyday conversation. 
 You may engage in light small talk but avoid deep or sensitive topics.
 
@@ -233,14 +234,14 @@ Rules:
 2. Do NOT infer or guess hidden health conditions.
 3. Never provide medical advice, diagnosis, or disease treatment suggestions.
 4. You may update and use a structured User Profile (provided in-context) 
-   to improve future recommendations.
+    to improve future recommendations.
 5. This personalization is allowed for:
-   - preferred flavors (cay, ít dầu mỡ…)
-   - preferred cuisines
-   - disliked ingredients
-   - common missing ingredients
-   - dietary goals (high-protein, low-carb, low-fat, eat-clean…)
-   - cooking style (món nhanh, ít bước, ít nguyên liệu…)
+    - preferred flavors (cay, ít dầu mỡ…)
+    - preferred cuisines
+    - disliked ingredients
+    - common missing ingredients
+    - dietary goals (high-protein, low-carb, low-fat, eat-clean…)
+    - cooking style (món nhanh, ít bước, ít nguyên liệu…)
 
 ============================================================
 = 4. NUTRITIONAL GUIDANCE (NON-MEDICAL)                     =
@@ -272,7 +273,10 @@ BUT you must:
 - Provide clear, structured, helpful answers.
 - Maintain high factual accuracy.
 - Never hallucinate missing recipe details.
-        """
+
+# User Preferences (for personalization)
+{preferences_text}
+"""
         response = self.gemini_client.generate_with_conversation_and_rag(
             user_query=translated_query,
             rag_context=rag_context,
