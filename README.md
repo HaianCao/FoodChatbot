@@ -8,8 +8,8 @@
 - **📝 Tiêu đề:** Chatbot ẩm thực
 - **📅 Ngày nộp:**
 - **📄 Báo cáo PDF:** https://github.com/HaianCao/FoodChatbot/blob/main/LaTeX%20Template/main-vi.pdf
-- **🖥️ Slide thuyết trình:** 🖥️ [Liên kết tới slide thuyết trình trong kho lưu trữ này]
-- **📂 Kho lưu trữ:** 📁 Bao gồm mã nguồn, dữ liệu và tài liệu (hoặc dẫn link ngoài nếu cần)
+- **🖥️ Slide thuyết trình:** https://github.com/HaianCao/FoodChatbot/blob/main/slide.pptx
+- **📂 Kho lưu trữ:** https://github.com/HaianCao/FoodChatbot
 
 **👥 Thành viên nhóm:**
 
