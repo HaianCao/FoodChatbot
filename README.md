@@ -65,6 +65,9 @@ FoodChatbot/
 │   ├── src/web/         # Trang web để chat
 |   └── main.py          # File chính chạy chatbot
 ├── LaTeX Template/      # Mẫu báo cáo
+├── slide.pptx           # Slide báo cáo
+├── multi-turn.csv       # Kết quả thực nghiệm multi-turn
+├── oneshot.csv          # Kết quả thực nghiệm oneshot
 ├── Proposed Topic Template.md 
 └── README.md            # Mô tả dự án
 ```
