@@ -6,7 +6,7 @@
 - **📅 Học kỳ:** Học kỳ 1 - 2025-2026
 - **🏫 Trường:** VNU-HUS (Đại học Quốc gia Hà Nội - Trường Đại học Khoa học Tự nhiên)
 - **📝 Tiêu đề:** Chatbot ẩm thực
-- **📅 Ngày nộp:**
+- **📅 Ngày nộp:** 30/11/2025
 - **📄 Báo cáo PDF:** https://github.com/HaianCao/FoodChatbot/blob/main/LaTeX%20Template/main-vi.pdf
 - **🖥️ Slide thuyết trình:** https://github.com/HaianCao/FoodChatbot/blob/main/slide.pptx
 - **📂 Kho lưu trữ:** https://github.com/HaianCao/FoodChatbot
@@ -130,3 +130,4 @@ python main.py
 - [x] ⬆️ Tải lên báo cáo PDF, slide trình bày và mã nguồn
 - [x] 🧩 Đảm bảo tất cả mã nguồn được tài liệu hóa đầy đủ với bình luận và docstring
 - [x] 🔗 Kiểm tra các liên kết và tài liệu tham khảo hoạt động đúng
+

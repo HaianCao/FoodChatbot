@@ -3,11 +3,20 @@
 % Packages
 \usepackage{graphicx}
 \usepackage{geometry}
-\usepackage{hyperref}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xurl}
 \usepackage[utf8]{vietnam}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{float}
+\usepackage{listings}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+}
 
 % Define degree symbol command to avoid undefined \degree
 \newcommand{\degree}{\ensuremath{^\circ}}
@@ -24,6 +33,7 @@
     Đỗ Minh Đức - 23001864 \\
     Phạm Nhật Quang - 23001920
 }
+\newcommand{\courseinfo}{Mã học phần: MAT1206E \\ Học kỳ 1, Năm học 2025-2026}
 \newcommand{\courseinfo}{Mã học phần: MAT1206E \\ Học kỳ 1, Năm học 2025-2026}
 \newcommand{\universitylogo}{HUS.png} % Đặt file logo vào cùng thư mục
 
@@ -53,7 +63,7 @@
 \begin{center}
     {\LARGE \textbf{Thông tin Dự án}}\\[1.5em]
     \begin{tabular}{rl}
-        \textbf{Học phần:} & MAT1207E -- Nhập môn Trí tuệ Nhân tạo \\
+        \textbf{Học phần:} & MAT1206E -- Nhập môn Trí tuệ Nhân tạo \\
         \textbf{Học kỳ:} & Học kỳ 1, Năm học 2025-2026 \\
         \textbf{Trường:} & VNU-HUS (Đại học Quốc gia Hà Nội -- Trường Đại học Khoa học Tự nhiên) \\
         \textbf{Tên dự án:} & Chatbot Ẩm Thực \\
@@ -946,7 +956,7 @@ Pipeline thuật toán của hệ thống được thiết kế xoay quanh kiế
 
 Dữ liệu cho hệ thống chatbot ẩm thực được thu 
 thập trực tiếp từ trang web 
-\texttt{https://therecipecritic.com} thông qua 
+\url{https://therecipecritic.com} thông qua 
 quá trình khai thác tự động. Mỗi trang công thức 
 nấu ăn được tách và lưu trữ dưới dạng một tệp 
 JSON chứa đầy đủ các thành phần thông tin cần 
