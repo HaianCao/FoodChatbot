@@ -87,9 +87,23 @@ source venv/bin/activate
 venv\Scripts\activate 
 
 pip install -r requirements.txt
-```
 
-Sau khi đã cài đặt xong môi trường, xem tiếp hướng dẫn chạy file trong các file `README.md` của từng module nhỏ
+# Chạy Crawler
+cd crawler
+python crawl_category_links.py
+python crawl_recipe_links_parallel.py
+python crawl_recipe_infos_parallel.py
+cd ..
+
+# Chạy tiền xử lý
+cd preprocessing
+python food_preprocessing.py
+cd ..
+
+# Chạy server cho chatbot
+cd bot
+python main.py
+```
 
 ## Tài liệu tham khảo & Phụ lục
 

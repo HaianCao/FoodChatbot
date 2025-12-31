@@ -1,4 +1,4 @@
-\documentclass[a4paper]{book}
+\documentclass[a4paper,oneside]{book}
 
 % Packages
 \usepackage{graphicx}
@@ -24,7 +24,7 @@
     Đỗ Minh Đức - 23001864 \\
     Phạm Nhật Quang - 23001920
 }
-\newcommand{\courseinfo}{Mã học phần: MAT1207E \\ Học kỳ 1, Năm học 2025-2026}
+\newcommand{\courseinfo}{Mã học phần: MAT1206E \\ Học kỳ 1, Năm học 2025-2026}
 \newcommand{\universitylogo}{HUS.png} % Đặt file logo vào cùng thư mục
 
 \newcommand{\doi}[1]{\href{https://doi.org/#1}{\texttt{#1}}} % DOI link command
@@ -578,218 +578,367 @@ trong các khối FFN:
 \]
 
 \subsection{Vector Database và Nhúng từ}
+\label{subsec:vector-db-embedding}
 
-\paragraph{Ý tưởng nhúng từ}
-Nhúng từ là hàm ánh xạ \(f: \text{Text} \to 
-\mathbb{R}^d\) đưa một đoạn văn bản (ví dụ: 
-tên món, danh sách nguyên liệu, bước nấu) về 
-không gian vector \(d\)-chiều sao cho các văn 
-bản có ý nghĩa tương tự nằm gần nhau.
-
-\paragraph{Các trường dữ liệu}
-Mỗi mục trong database gồm:
-\begin{itemize}
-    \item \texttt{ids}: Khóa duy nhất cho mỗi document.
-    \item \texttt{embeddings}: Vectơ \(\in 
-    \mathbb{R}^d\).
-    \item \texttt{documents}: Nội dung văn bản thô 
-    (ví dụ: "Ingredients: ...; Steps: ...").
-    \item \texttt{metadatas}: Metadata bổ sung 
-    (ví dụ: tên món, thời gian nấu, dinh dưỡng,...).
-\end{itemize}
-
-\paragraph{Ưu điểm của vector DB}
-\begin{itemize}
-    \item \textbf{Tìm kiếm ngữ nghĩa}: truy 
-    vấn không phụ thuộc vào từ khóa chính xác.
-    \item \textbf{Khả năng mở rộng}: lưu trữ 
-    hàng chục ngàn đến hàng triệu vectors, kết 
-    hợp ANN (Approximate Nearest Neighbor Search 
-    - Tìm kiếm láng giềng gần đúng) để truy vấn hiệu quả.
-    \item \textbf{Dễ cập nhật tri thức}: chỉ 
-    cần thêm/sửa văn bản mà không phải fine-tune 
-    LLM.
-\end{itemize}
-
-\subsection{Độ tương đồng cosine}
-
-\paragraph{Định nghĩa độ tương đồng cosine\cite{nlp_book}}
-Với hai vector \(u, v \in \mathbb{R}^d\), độ 
-tương đồng cosine được tính:
+\paragraph{Khái niệm nhúng từ (Text Embedding)}
+Nhúng từ (text embedding) là quá trình học một hàm ánh xạ liên tục:
 \[
-\text{cosine}(u,v) = \frac{u \cdot v}{\|u\| \cdot \|v\|} = \frac{\sum_{i=1}^d u_i v_i}{\sqrt{\sum_{i=1}^d u_i^2} \cdot \sqrt{\sum_{i=1}^d v_i^2}} 
+f_\theta : \mathcal{T} \rightarrow \mathbb{R}^d
 \]
-Mục tiêu là chọn những văn bản có cosine cao 
-nhất so với vector nhúng của truy vấn.
-
-\paragraph{Thuộc tính và ngưỡng}
+trong đó:
 \begin{itemize}
-    \item Giá trị nằm trong \([-1,1]\), nhưng 
-    với nhúng từ từ LLM/public models thường 
-    nằm trong \([0,1]\) do cấu trúc nhúng.
-    \item Thực tiễn: đặt ngưỡng lọc (ví dụ 
-    0.65–0.75) để loại bỏ văn bản không liên 
-    quan; ngưỡng cụ thể cần hiệu chỉnh dựa trên 
-    đánh giá thực nghiệm.
-    \item Kết hợp với ranking dựa trên cosine 
-    để chọn top-\(k\) văn bản (k thường trong 
-    khoảng 3–10).
+    \item $\mathcal{T}$ là không gian các chuỗi văn bản rời rạc (discrete text space),
+    \item $\mathbb{R}^d$ là không gian vector liên tục $d$-chiều,
+    \item $\theta$ là tập tham số của mô hình nhúng đã được huấn luyện trước.
 \end{itemize}
+
+Mục tiêu của nhúng từ không phải là biểu diễn cú pháp (syntax), mà là học một biểu diễn ngữ nghĩa (semantic representation) sao cho các văn bản có nội dung và ý nghĩa tương tự được ánh xạ đến các vector nằm gần nhau trong không gian hình học.
+
+\paragraph{Góc nhìn hình học của không gian nhúng}
+Trong không gian nhúng, mỗi đoạn văn bản được xem như một điểm trong $\mathbb{R}^d$. Khoảng cách hoặc góc giữa các vector phản ánh mức độ tương đồng ngữ nghĩa giữa các văn bản tương ứng. Điều này cho phép chuyển bài toán xử lý ngôn ngữ tự nhiên từ:
+\begin{center}
+\textit{so khớp chuỗi ký tự}
+\end{center}
+sang:
+\begin{center}
+\textit{tìm kiếm láng giềng gần nhất trong không gian metric}.
+\end{center}
+
+Giả định quan trọng của phương pháp này là các văn bản tự nhiên không phân bố ngẫu nhiên trong $\mathbb{R}^d$ mà nằm trên các manifold ngữ nghĩa có chiều thấp hơn, nơi mà các phép đo khoảng cách như cosine similarity có ý nghĩa.
+
+\paragraph{Cấu trúc dữ liệu trong Vector Database}
+Mỗi mục trong vector database được thiết kế để tách biệt rõ ràng ba không gian thông tin:
+\begin{itemize}
+    \item \texttt{ids}: khóa định danh duy nhất, dùng để truy vết và trích dẫn nguồn.
+    \item \texttt{embeddings}: vector nhúng $\in \mathbb{R}^d$, chỉ dùng cho truy xuất ngữ nghĩa.
+    \item \texttt{documents}: nội dung văn bản thô hoặc đã được chuẩn hóa, dùng để đưa vào prompt của LLM.
+    \item \texttt{metadatas}: tập thuộc tính có cấu trúc (thời gian nấu, dinh dưỡng, khẩu phần, nguồn, \ldots) dùng cho lọc logic.
+\end{itemize}
+
+Thiết kế này cho phép:
+\begin{itemize}
+    \item thay đổi chiến lược truy xuất mà không ảnh hưởng đến mô hình sinh,
+    \item mở rộng metadata mà không cần tái nhúng toàn bộ dữ liệu,
+    \item kết hợp tìm kiếm ngữ nghĩa với các ràng buộc logic một cách linh hoạt.
+\end{itemize}
+
+\paragraph{Ưu điểm của Vector Database trong hệ RAG}
+Vector database đóng vai trò là bộ nhớ tri thức ngoài (external knowledge store) cho mô hình ngôn ngữ lớn, mang lại các lợi ích sau:
+\begin{itemize}
+    \item \textbf{Tìm kiếm ngữ nghĩa}: không phụ thuộc vào từ khóa chính xác, giúp hệ thống hiểu các truy vấn diễn đạt tự nhiên.
+    \item \textbf{Khả năng mở rộng}: có thể lưu trữ từ hàng chục nghìn đến hàng triệu vector, kết hợp với các thuật toán ANN để truy vấn hiệu quả.
+    \item \textbf{Dễ cập nhật tri thức}: dữ liệu có thể được thêm, sửa hoặc xoá mà không cần huấn luyện lại mô hình LLM.
+    \item \textbf{Giảm hiện tượng ảo giác}: LLM chỉ sinh câu trả lời dựa trên tri thức được truy xuất từ database.
+\end{itemize}
+
+\subsection{Độ tương đồng cosine và tìm kiếm láng giềng}
+
+\paragraph{Định nghĩa độ tương đồng cosine}
+Cho hai vector $u, v \in \mathbb{R}^d$, độ tương đồng cosine được định nghĩa như sau~\cite{nlp_book}:
+\[
+\text{cosine}(u, v) = \frac{u \cdot v}{\|u\| \cdot \|v\|}
+= \frac{\sum_{i=1}^d u_i v_i}{\sqrt{\sum_{i=1}^d u_i^2} \cdot \sqrt{\sum_{i=1}^d v_i^2}}
+\]
+
+Cosine similarity đo góc giữa hai vector, thay vì độ lớn tuyệt đối, do đó bất biến với phép co giãn (scaling) của vector.
+
+\paragraph{Lý do lựa chọn cosine similarity}
+Cosine similarity đặc biệt phù hợp với embedding từ các mô hình ngôn ngữ hiện đại vì:
+\begin{itemize}
+    \item embedding thường được chuẩn hóa theo chuẩn $L_2$,
+    \item độ lớn vector ít mang ý nghĩa ngữ nghĩa,
+    \item dot-product và cosine trở nên gần tương đương khi vector đã chuẩn hóa.
+\end{itemize}
+
+Trong thực nghiệm, giá trị cosine similarity giữa các văn bản thường tập trung trong khoảng $[0.2, 0.9]$, thay vì toàn miền $[-1, 1]$.
+
+\paragraph{Ngưỡng tương đồng và chiến lược chọn top-$k$}
+Trong thực tế triển khai, hệ thống thường:
+\begin{itemize}
+    \item đặt một ngưỡng cosine tối thiểu (ví dụ $0.65$--$0.75$) để loại bỏ các văn bản không liên quan,
+    \item sắp xếp các vector còn lại theo cosine giảm dần,
+    \item chọn top-$k$ văn bản (với $k$ thường trong khoảng $3$--$10$) để đưa vào prompt.
+\end{itemize}
+
+Giá trị ngưỡng và $k$ không mang tính cố định mà cần được hiệu chỉnh dựa trên đánh giá thực nghiệm và đặc thù của miền dữ liệu.
+
+\paragraph{Approximate Nearest Neighbor (ANN)}
+Bài toán tìm kiếm láng giềng gần nhất chính xác (Exact Nearest Neighbor Search) yêu cầu tính khoảng cách giữa vector truy vấn và toàn bộ $N$ vector trong database, với độ phức tạp thời gian:
+\[
+O(N \cdot d)
+\]
+trong đó $d$ là số chiều của embedding. Khi $N$ lớn (từ hàng trăm nghìn đến hàng triệu vector), cách tiếp cận này trở nên không khả thi về mặt độ trễ.
+
+Do đó, các vector database hiện đại sử dụng các thuật toán tìm kiếm láng giềng gần đúng (Approximate Nearest Neighbor -- ANN), với mục tiêu:
+\begin{itemize}
+    \item giảm độ phức tạp truy vấn xuống gần $O(\log N)$ hoặc $O(N^\alpha)$ với $\alpha < 1$,
+    \item đánh đổi một phần độ chính xác để đạt được tốc độ truy vấn cao và khả năng mở rộng.
+\end{itemize}
+
+\paragraph{HNSW (Hierarchical Navigable Small World)}
+HNSW xây dựng một đồ thị đa tầng (multi-layer graph) dựa trên ý tưởng \emph{small-world network}. Mỗi vector được biểu diễn như một nút, các cạnh nối tới những vector gần nhất theo khoảng cách metric.
+
+Cấu trúc HNSW gồm:
+\begin{itemize}
+    \item nhiều tầng đồ thị, trong đó tầng cao có ít nút hơn và liên kết thưa,
+    \item tầng thấp nhất chứa toàn bộ vector và liên kết dày đặc hơn.
+\end{itemize}
+
+Quá trình truy vấn diễn ra theo kiểu \emph{top-down greedy search}:
+\begin{enumerate}
+    \item bắt đầu từ tầng cao nhất với một nút khởi tạo,
+    \item di chuyển dần xuống các tầng thấp hơn,
+    \item tại mỗi tầng, chỉ khám phá một tập con nhỏ các láng giềng tiềm năng.
+\end{enumerate}
+
+HNSW có ưu điểm:
+\begin{itemize}
+    \item độ chính xác (recall) rất cao,
+    \item độ trễ thấp,
+    \item không cần huấn luyện offline.
+\end{itemize}
+
+Nhược điểm chính là:
+\begin{itemize}
+    \item tiêu tốn nhiều bộ nhớ do lưu trữ đồ thị,
+    \item chi phí xây dựng index cao khi số lượng vector lớn.
+\end{itemize}
+
+\paragraph{IVF (Inverted File Index)}
+IVF dựa trên ý tưởng \emph{phân cụm không gian vector}. Trước tiên, toàn bộ tập vector được phân cụm thành $K$ centroid (thường bằng k-means).
+
+Mỗi vector được gán vào cụm gần nhất, và database chỉ lưu:
+\begin{itemize}
+    \item danh sách các vector thuộc mỗi cụm,
+    \item vector centroid đại diện cho cụm.
+\end{itemize}
+
+Khi truy vấn:
+\begin{enumerate}
+    \item vector truy vấn được so sánh với các centroid,
+    \item chỉ $n \ll K$ cụm gần nhất được chọn,
+    \item tìm kiếm chi tiết chỉ diễn ra trong các cụm này.
+\end{enumerate}
+
+Ưu điểm của IVF:
+\begin{itemize}
+    \item giảm đáng kể số lượng vector cần so sánh,
+    \item chi phí bộ nhớ thấp hơn HNSW.
+\end{itemize}
+
+Nhược điểm:
+\begin{itemize}
+    \item phụ thuộc mạnh vào chất lượng phân cụm,
+    \item recall giảm nếu vector truy vấn nằm gần ranh giới các cụm.
+\end{itemize}
+
+\paragraph{Product Quantization (PQ)}
+Product Quantization là kỹ thuật \emph{nén vector} nhằm giảm chi phí bộ nhớ và tăng tốc tính khoảng cách.
+
+Ý tưởng chính của PQ là:
+\begin{itemize}
+    \item chia mỗi vector $d$-chiều thành $m$ vector con,
+    \item mỗi vector con được lượng tử hóa bằng một codebook nhỏ,
+    \item toàn bộ vector được biểu diễn bằng các chỉ số codebook thay vì giá trị thực.
+\end{itemize}
+
+Khoảng cách giữa hai vector được xấp xỉ bằng cách tra bảng khoảng cách đã tính trước giữa các codebook.
+
+Ưu điểm của PQ:
+\begin{itemize}
+    \item giảm mạnh bộ nhớ lưu trữ,
+    \item phù hợp với hệ thống quy mô rất lớn.
+\end{itemize}
+
+Nhược điểm:
+\begin{itemize}
+    \item độ chính xác thấp hơn do sai số lượng tử hóa,
+    \item thường được dùng kết hợp với IVF (IVF+PQ) để cân bằng tốc độ và độ chính xác.
+\end{itemize}
+
+\paragraph{So sánh và lựa chọn trong thực tế}
+Trong bối cảnh hệ Retrieval-Augmented Generation:
+\begin{itemize}
+    \item HNSW thường được ưu tiên khi yêu cầu độ chính xác cao và số lượng vector ở mức vừa phải,
+    \item IVF và IVF+PQ phù hợp hơn với hệ thống có quy mô rất lớn và hạn chế bộ nhớ,
+    \item việc lựa chọn thuật toán ANN là một quyết định kiến trúc quan trọng, ảnh hưởng trực tiếp đến chất lượng truy xuất và độ trễ của toàn hệ thống.
+\end{itemize}
+
+ANN đánh đổi một phần độ chính xác để đạt được độ trễ thấp và khả năng mở rộng cao. Trong bối cảnh hệ RAG, việc truy xuất được tập văn bản ``đủ liên quan'' quan trọng hơn so với việc tìm đúng láng giềng gần nhất tuyệt đối.
+
+\paragraph{Vai trò của Vector Database trong kiến trúc RAG}
+Trong kiến trúc Retrieval-Augmented Generation, vector database đóng vai trò là cầu nối giữa:
+\begin{itemize}
+    \item khả năng biểu diễn ngữ nghĩa của embedding,
+    \item và khả năng sinh ngôn ngữ của mô hình LLM.
+\end{itemize}
+
+LLM không trực tiếp ``nhớ'' tri thức chi tiết, mà dựa vào vector database để truy xuất thông tin xác thực. Điều này giúp hệ thống trở nên an toàn hơn, dễ kiểm soát hơn và phù hợp với các bài toán yêu cầu độ chính xác cao như tư vấn ẩm thực và dinh dưỡng.
 
 \subsection{Kiến trúc Retrieval-Augmented Generation (RAG)\cite{nlp_book}}
+\label{subsec:rag}
 
 \paragraph{Nguyên lý tổng quát}
+Retrieval-Augmented Generation (RAG) là một kiến trúc lai (hybrid architecture) kết hợp giữa:
+\begin{itemize}
+    \item khả năng hiểu và sinh ngôn ngữ tự nhiên của mô hình ngôn ngữ lớn (LLM),
+    \item và khả năng truy xuất tri thức chính xác, có kiểm soát từ cơ sở dữ liệu bên ngoài.
+\end{itemize}
 
-RAG là một kiến trúc lai giữa khả năng 
-hiểu và sinh ngôn ngữ của LLM và khả 
-năng truy xuất tri thức chính xác của 
-cơ sở dữ liệu dạng vector. Khi người dùng đưa 
-ra một câu hỏi, hệ thống không để mô hình LLM 
-tự trả lời dựa trên trí nhớ nội tại, mà thay vào đó:
+Thay vì để LLM sinh câu trả lời hoàn toàn dựa trên tri thức nội tại được mã hoá trong tham số mô hình, RAG đưa vào một bước truy xuất tri thức trung gian. Khi người dùng đưa ra một truy vấn, hệ thống thực hiện:
 \begin{enumerate}
-    \item Truy xuất tri thức liên quan một cách 
-    có kiểm soát từ cơ sở dữ liệu.
-    \item Kết hợp tri thức đó vào prompt để 
-    LLM sinh ra câu trả lời dựa trên thông 
-    tin có thật.
+    \item Truy xuất các tài liệu liên quan nhất từ cơ sở dữ liệu vector dựa trên ngữ nghĩa.
+    \item Kết hợp các tài liệu này vào prompt để LLM sinh câu trả lời dựa trên thông tin có thật.
 \end{enumerate}
 
-Cách tiếp cận này tối ưu cho các bài toán yêu 
-cầu thông tin cập nhật, chính xác, giảm thiểu sai 
-sót do mô hình tự bịa (hallucination).
+Cách tiếp cận này đặc biệt phù hợp với các bài toán yêu cầu thông tin cập nhật, chính xác và có thể kiểm chứng, đồng thời giúp giảm thiểu hiện tượng mô hình sinh thông tin sai lệch (hallucination).
 
-\paragraph{Hệ thống gồm 2 mô-đun chính}
+\paragraph{Phân rã kiến trúc tổng thể}
+Về mặt kiến trúc, một hệ thống RAG hoàn chỉnh được chia thành hai mô-đun chính, hoạt động độc lập nhưng liên kết chặt chẽ:
+
 \begin{enumerate}
-    \item \textbf{Retriever}: nhận câu hỏi, sinh 
-    embedding, so khớp với các vector trong 
-    database và trả về các đoạn văn bản liên 
-    quan nhất.
-    \item \textbf{Generator}: dùng mô hình 
-    LLM để sinh câu trả lời dựa trên ngữ cảnh 
-    đã được truy xuất.
+    \item \textbf{Retriever}: chịu trách nhiệm truy xuất tri thức liên quan.
+    \item \textbf{Generator}: chịu trách nhiệm sinh câu trả lời dựa trên ngữ cảnh đã truy xuất.
 \end{enumerate}
 
-Hai mô-đun hoạt động độc lập nhưng liên kết chặt 
-chẽ, đảm bảo luồng xử lý rõ ràng và dễ mở rộng.
+Cách phân tách này giúp hệ thống:
+\begin{itemize}
+    \item dễ bảo trì và mở rộng,
+    \item cho phép cải tiến từng mô-đun mà không ảnh hưởng đến mô-đun còn lại,
+    \item tách biệt rõ ràng giữa truy xuất tri thức và suy luận ngôn ngữ.
+\end{itemize}
+
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{rag_architecture.png}
-    \caption{Kiến trúc Retrieval-Augmented Generation (RAG).\cite{nlp_book}}
+    \caption{Kiến trúc tổng quát của hệ Retrieval-Augmented Generation (RAG).\cite{nlp_book}}
 \end{figure}
 
-\paragraph{Lợi ích nổi bật của RAG}
+\paragraph{Chi tiết mô-đun Retriever}
+Trong thực tế, Retriever không phải là một khối đơn giản mà bao gồm nhiều thành phần con:
+
 \begin{itemize}
-    \item \textbf{Giảm hallucination}: LLM phải 
-    dựa trên các đoạn ngữ cảnh có thật, giúp hạn 
-    chế sinh thông tin sai.
-    \item \textbf{Không cần huấn luyện lại LLM}: 
-    chỉ việc cập nhật vector DB là hệ thống có 
-    thêm tri thức mới.
-    \item \textbf{Tùy biến theo mục tiêu}: có 
-    thể thay đổi chiến lược truy xuất (top-$k$, 
-    filter theo tag nguyên liệu, theo calories, 
-    \dots), hoặc tùy chỉnh quy tắc tạo prompt.
+    \item \textbf{Query Encoder}: chuyển truy vấn người dùng thành vector embedding.
+    \item \textbf{Vector Search Engine}: thực hiện tìm kiếm láng giềng gần đúng (ANN) trên vector database.
+    \item \textbf{Metadata Filtering}: áp dụng các ràng buộc logic (nguyên liệu, thời gian nấu, chế độ ăn, \dots).
+    \item \textbf{Re-ranking Module}: sắp xếp lại các kết quả truy xuất bằng mô hình đánh giá mức độ liên quan chi tiết hơn.
 \end{itemize}
 
-\paragraph{Chi tiết prompt injection}
-Thực tế thường áp dụng chiến lược:
+Chiến lược phổ biến là truy xuất hai giai đoạn:
+\begin{itemize}
+    \item Giai đoạn 1: dùng embedding để lấy top-$k_1$ ứng viên (ví dụ $k_1 = 50$--$100$).
+    \item Giai đoạn 2: dùng mô hình re-ranking để chọn top-$k_2$ tài liệu tốt nhất (ví dụ $k_2 = 5$--$10$).
+\end{itemize}
+
+\paragraph{Chi tiết mô-đun Generator}
+Mô-đun Generator sử dụng LLM để sinh câu trả lời dựa trên ngữ cảnh đã được truy xuất. LLM không được phép suy luận vượt quá thông tin cung cấp trong context, nhằm đảm bảo tính chính xác và nhất quán.
+
+Vai trò chính của Generator gồm:
+\begin{itemize}
+    \item tổng hợp thông tin từ nhiều đoạn context,
+    \item suy luận và diễn đạt lại thông tin theo ngôn ngữ tự nhiên,
+    \item đảm bảo câu trả lời phù hợp với mục tiêu hội thoại.
+\end{itemize}
+
+\paragraph{Chiến lược Prompt Injection}
+Prompt injection là bước then chốt quyết định chất lượng đầu ra của RAG. Một chiến lược chuẩn thường gồm:
+
 \begin{enumerate}
-    \item Lấy top-\(k\) đoạn liên quan.
-    \item Nếu các đoạn dài, tóm tắt mỗi đoạn 
-    bằng một câu ngắn (tóm tắt) trước khi 
-    chèn vào prompt.
-    \item Chèn metadata quan trọng (ví dụ: 
-    nguồn, thời gian nấu, lượng calo).
-    \item Cấu trúc prompt: \texttt{[System 
-    Instruction] + [Retrieved Contexts] + 
-    [User Query]}.
+    \item Chọn top-$k$ đoạn context có độ liên quan cao nhất.
+    \item Tóm tắt hoặc rút gọn các đoạn dài để tiết kiệm ngân sách token.
+    \item Chèn metadata quan trọng (nguồn, thời gian, dinh dưỡng, \dots).
+    \item Cấu trúc prompt theo dạng:
+    \[
+        P = [\text{System Instruction}] + [\text{Retrieved Context}] + [\text{User Query}]
+    \]
 \end{enumerate}
 
-\subsection{Quy trình tổng quát}
+System Instruction thường được thiết kế để:
+\begin{itemize}
+    \item buộc mô hình chỉ sử dụng thông tin trong context,
+    \item từ chối trả lời nếu thiếu dữ liệu,
+    \item hạn chế suy diễn ngoài phạm vi tri thức được cung cấp.
+\end{itemize}
 
-Thuật toán chính của hệ thống được thiết kế xoay 
-quanh pipeline Retrieval-Augmented Generation (RAG), 
-kết hợp giữa khả năng suy luận ngôn ngữ của mô hình 
-sinh ngôn ngữ và khả năng truy xuất tri thức theo ngữ nghĩa 
-từ vector database. Pipeline thuật toán gồm các bước sau:
-
-\subsubsection{1. Nhận và chuẩn hoá truy vấn người dùng}
+\paragraph{Các biến thể kiến trúc RAG}
+Tuỳ theo độ phức tạp của bài toán, RAG có thể được triển khai dưới nhiều biến thể:
 
 \begin{itemize}
-    \item Người dùng gửi câu hỏi bất kỳ liên quan 
-    đến chủ đề mà chatbot hỗ trợ.
-    \item Truy vấn được đưa vào mô-đun đảm nhiệm việc:
-    \begin{itemize}
-        \item Phát hiện ngôn ngữ đầu vào.
-        \item Chuẩn hóa và loại bỏ nhiễu trong câu hỏi.
-        \item Dịch truy vấn sang ngôn ngữ phù hợp nếu cần 
-        (để tương thích với dữ liệu embedding 
-        trong DB).
-    \end{itemize}
+    \item \textbf{Naive RAG}: truy xuất một lần và sinh câu trả lời trực tiếp.
+    \item \textbf{RAG với Re-ranking}: bổ sung tầng đánh giá lại kết quả truy xuất.
+    \item \textbf{Multi-hop RAG}: thực hiện nhiều lượt truy xuất nối tiếp để giải các câu hỏi suy luận nhiều bước.
+    \item \textbf{Modular RAG}: tách riêng các mô-đun truy xuất, suy luận, kiểm chứng và tổng hợp.
+\end{itemize}
+
+\paragraph{Kiểm soát hallucination và các dạng lỗi}
+Mặc dù RAG giúp giảm đáng kể hallucination, hệ thống vẫn có thể gặp các failure modes sau:
+
+\begin{itemize}
+    \item \textbf{Retrieval failure}: truy xuất thiếu hoặc sai ngữ cảnh.
+    \item \textbf{Context conflict}: các đoạn truy xuất chứa thông tin mâu thuẫn.
+    \item \textbf{Over-generation}: mô hình suy diễn vượt quá dữ liệu cung cấp.
+\end{itemize}
+
+Các biện pháp kiểm soát thường bao gồm:
+\begin{itemize}
+    \item đặt ngưỡng cosine similarity tối thiểu,
+    \item yêu cầu LLM trích dẫn nguồn từ metadata,
+    \item từ chối trả lời nếu không có context phù hợp.
+\end{itemize}
+
+\subsection{Quy trình tổng quát của hệ thống RAG}
+
+Pipeline thuật toán của hệ thống được thiết kế xoay quanh kiến trúc RAG, bao gồm các bước sau:
+
+\subsubsection{1. Nhận và chuẩn hoá truy vấn người dùng}
+\begin{itemize}
+    \item Tiếp nhận câu hỏi từ người dùng.
+    \item Phát hiện ngôn ngữ đầu vào.
+    \item Chuẩn hoá văn bản và loại bỏ nhiễu.
+    \item Dịch truy vấn sang ngôn ngữ tương thích với dữ liệu embedding nếu cần.
 \end{itemize}
 
 \subsubsection{2. Sinh embedding cho truy vấn}
 \begin{itemize}
-    \item Truy vấn được đưa vào mô hình nhúng từ
-    để chuyển đổi thành vector biểu diễn:
+    \item Truy vấn được ánh xạ sang không gian vector:
     \[
-        q = \text{Embed}(query)
+        q = \text{Embed}(\text{query})
     \]
-    \item Kết quả là vector biểu diễn ngữ nghĩa 
-    có độ dài cố định, 
-    dùng để truy vấn vào cơ sở dữ liệu vector.
+    \item Vector $q \in \mathbb{R}^d$ biểu diễn ngữ nghĩa của truy vấn.
 \end{itemize}
 
-\subsubsection{3. Truy vấn ngữ nghĩa}
+\subsubsection{3. Truy vấn ngữ nghĩa trên Vector Database}
 \begin{itemize}
-    \item Cơ sở dữ liệu vector lưu các embedding của tài liệu 
-    ẩm thực.
-    \item Hệ thống thực hiện tìm kiếm top-$k$ 
-    văn bản tương đồng nhất:
+    \item Thực hiện tìm kiếm top-$k$ văn bản tương đồng nhất:
     \[
         \text{docs} = \text{VectorDB.top\_k}(q, k)
     \]
-    \item Độ tương đồng được tính bằng cosine 
-    similarity:
+    \item Độ tương đồng được đo bằng cosine similarity:
     \[
         \text{cosine}(q, d_i) = \frac{q \cdot d_i}{\|q\|\|d_i\|}
     \]
-    \item Các đoạn văn liên quan nhất được trả 
-    về kèm metadata ví dụ như tên món, nguyên liệu, thời 
-    gian nấu, mô tả, v.v.
+    \item Kết quả trả về bao gồm văn bản và metadata tương ứng.
 \end{itemize}
 
 \subsubsection{4. Tiêm ngữ cảnh (Context Injection)}
 \begin{itemize}
-    \item Các đoạn thu được được tổng hợp lại 
-    thành một khối văn bản dạng:
+    \item Tổng hợp các đoạn truy xuất:
     \[
         C = \text{concat}(d_1, d_2, \ldots, d_k)
     \]
-    \item Context được chèn vào prompt theo 
-    cấu trúc:
+    \item Chèn context vào prompt:
     \[
-        P = [System\ Instructions] + [Retrieved\ Context\ C] + [User\ Query]
+        P = [\text{System}] + [C] + [\text{User Query}]
     \]
-    \item Đây là giai đoạn quan trọng đảm bảo 
-    mô hình sinh ngôn ngữ không sinh thông tin sai (hallucination).
 \end{itemize}
 
-\subsubsection{5. Sinh phản hồi (Answer Generation)}
+\subsubsection{5. Sinh phản hồi}
 \begin{itemize}
-    \item Prompt hoàn chỉnh được đưa vào mô hình 
-    sinh ngôn ngữ.
-    \item Mô hình sinh ngôn ngữ sinh câu trả 
-    lời bằng ngôn ngữ phù hợp với hệ thống, sau khi:
-    \begin{itemize}
-        \item Kết hợp tri thức từ context đã 
-        truy xuất.
-        \item Tối ưu nội dung theo hướng hội 
-        thoại và hữu ích.
-    \end{itemize}
-    \item Đầu ra sau đó được dịch ngược trở lại
-    đúng ngôn ngữ của người dùng nếu cần.
+    \item Prompt hoàn chỉnh được đưa vào LLM.
+    \item LLM sinh câu trả lời dựa trên context.
+    \item Kết quả được hậu xử lý và dịch ngược nếu cần.
 \end{itemize}
+
 
 \chapter{Triển khai}
 
@@ -833,79 +982,299 @@ nhất như sau:
 
 %-----------------------------------------------------------------------
 \section{Thu thập dữ liệu}
+\label{sec:data-collection}
 
-Quá trình thu thập dữ liệu công thức nấu ăn cho 
-hệ thống \textbf{FoodChatbot} bao gồm ba giai 
-đoạn chính: 
-thu thập các link danh mục, thu thập link công
-thức chi tiết rồi từ đấy thu thập dữ liệu 
-chi tiết của từng công thức.
-
-\textbf{Công cụ chính:} Sử dụng Selenium để 
-tương tác với trang web động, kết hợp với 
-các kỹ thuật Chrome/undetected driver để 
-tránh bị chặn.
-
-\subsection*{Thu thập danh mục}
+Quá trình thu thập dữ liệu công thức nấu ăn cho hệ thống \textbf{FoodChatbot} được thiết kế như một pipeline crawler nhiều tầng, nhằm đảm bảo:
 \begin{itemize}
-    \item Thu thập toàn bộ link danh mục món ăn 
-    từ trang chủ.
-    \item Lọc các link trong danh sách cấm 
-    (blacklist) trước khi lưu lại.
-    \item Lưu kết quả vào các file tạm trong 
-    thư mục dữ liệu.
+    \item độ bao phủ dữ liệu lớn,
+    \item khả năng mở rộng,
+    \item tính ổn định khi thu thập trên website động,
+    \item và hạn chế tối đa nguy cơ bị chặn bởi cơ chế chống bot.
 \end{itemize}
 
-\subsection*{Thu thập link công thức chi tiết}
+Toàn bộ pipeline thu thập dữ liệu được chia thành ba giai đoạn chính:
+\begin{enumerate}
+    \item Thu thập các liên kết danh mục (category links).
+    \item Thu thập các liên kết công thức chi tiết (recipe links).
+    \item Thu thập nội dung chi tiết của từng công thức.
+\end{enumerate}
+
+\paragraph{Công cụ và công nghệ sử dụng}
+Hệ thống crawler sử dụng \textbf{Selenium WebDriver} làm công cụ chính để tương tác với website, do các lý do sau:
 \begin{itemize}
-    \item Thu thập từng trang category song song 
-    bằng cơ chế \textbf{đa tiến trình 
-    (multiprocessing)}.
-    \item Hỗ trợ tiếp tục thu thập từ trang 
-    hoặc URL đã dừng trước đó 
-    (\textbf{resume support}).
-    \item Trích xuất tất cả link công thức 
-    từ từng trang danh mục.
-    \item Dừng thu thập khi không còn link 
-    mới hoặc lỗi liên tiếp vượt quá giới hạn.
-    \item Lưu link theo từng trang nếu cấu 
-    hình bật để tránh mất dữ liệu.
+    \item Website mục tiêu sử dụng nội dung sinh động (dynamic content) dựa trên JavaScript.
+    \item Nhiều thành phần (pagination, lazy loading, comment) không thể truy xuất bằng HTTP request thuần.
 \end{itemize}
 
-\subsection*{Thu thập chi tiết từng công thức}
+Để giảm nguy cơ bị phát hiện là bot, hệ thống áp dụng các kỹ thuật \textbf{undetected driver}, kết hợp cấu hình trình duyệt nâng cao và chiến lược hành vi giống người dùng thật.
+
+\subsection{Selenium WebDriver trong hệ thống thu thập dữ liệu}
+\label{subsec:selenium}
+
+\paragraph{Tổng quan về Selenium WebDriver}
+Selenium WebDriver là một framework tự động hoá trình duyệt cho phép điều khiển trực tiếp các trình duyệt web phổ biến (Chrome, Firefox, Edge, \dots) thông qua giao diện lập trình. Không giống các thư viện thu thập dữ liệu dựa trên HTTP request thuần, Selenium vận hành bằng cách:
 \begin{itemize}
-    \item Mỗi URL công thức được thu thập và 
-    trích xuất các thông tin: mô tả, metadata, 
-    nguyên liệu, các bước chế biến, thông tin 
-    dinh dưỡng và bình luận.
-    \item Sử dụng \textbf{đa luồng 
-    (multithreading)} để xử lý nhiều URL cùng lúc.
-    \item Quản lý tiến trình bằng hàng đợi và 
-    cơ chế khóa để tránh xung đột dữ liệu.
-    \item Lưu từng công thức dưới dạng file 
-    JSON theo cấu trúc chuẩn trong thư mục dữ liệu.
-    \item Các biện pháp an toàn:
+    \item khởi tạo một phiên trình duyệt thật,
+    \item tải và thực thi đầy đủ mã HTML, CSS và JavaScript,
+    \item cho phép truy cập vào cây DOM sau khi nội dung động được render.
+\end{itemize}
+
+Do đó, Selenium đặc biệt phù hợp với các website hiện đại sử dụng kiến trúc frontend động (Single Page Application hoặc heavy JavaScript rendering).
+
+\paragraph{Lý do lựa chọn Selenium}
+Trong hệ thống \textbf{FoodChatbot}, Selenium được lựa chọn thay vì các giải pháp crawler truyền thống vì các lý do kỹ thuật sau:
+
+\begin{itemize}
+    \item Website mục tiêu sử dụng JavaScript để tải nội dung chính (lazy loading, pagination động).
+    \item Nhiều thành phần quan trọng (bình luận, đánh giá, danh sách nguyên liệu) chỉ xuất hiện sau khi thực thi script phía client.
+    \item Một số dữ liệu được nạp theo hành vi người dùng (scroll, click), không thể truy xuất trực tiếp qua API công khai.
+\end{itemize}
+
+Việc sử dụng Selenium cho phép hệ thống quan sát website gần giống hành vi của người dùng thật, từ đó đảm bảo độ đầy đủ và chính xác của dữ liệu thu thập.
+
+\paragraph{Mô hình hoạt động của Selenium trong crawler}
+Trong pipeline thu thập dữ liệu, mỗi instance Selenium được xem như một \emph{worker độc lập}, bao gồm:
+\begin{itemize}
+    \item một tiến trình trình duyệt riêng,
+    \item một phiên WebDriver riêng,
+    \item một ngữ cảnh DOM tách biệt.
+\end{itemize}
+
+Cách tổ chức này giúp:
+\begin{itemize}
+    \item tránh xung đột trạng thái giữa các luồng thu thập,
+    \item tăng khả năng song song hoá,
+    \item dễ dàng khởi động lại khi gặp lỗi.
+\end{itemize}
+
+\paragraph{Quản lý trạng thái và đồng bộ hoá}
+Selenium hoạt động theo mô hình bất đồng bộ với thời gian tải trang không xác định. Do đó, hệ thống áp dụng các kỹ thuật đồng bộ hoá sau:
+
+\begin{itemize}
+    \item \textbf{Explicit wait}: chờ các phần tử DOM cụ thể xuất hiện trước khi trích xuất dữ liệu.
+    \item \textbf{Implicit timeout}: giới hạn thời gian chờ để tránh treo tiến trình.
+    \item \textbf{Scroll simulation}: cuộn trang để kích hoạt lazy loading.
+\end{itemize}
+
+Các kỹ thuật này giúp giảm lỗi trích xuất do DOM chưa hoàn tất render.
+
+\paragraph{Hạn chế của Selenium}
+Mặc dù mạnh mẽ, Selenium cũng tồn tại một số hạn chế:
+
+\begin{itemize}
+    \item tiêu tốn nhiều tài nguyên CPU và RAM,
+    \item độ trễ cao hơn so với crawler dựa trên HTTP request,
+    \item khó mở rộng lên quy mô rất lớn nếu không có chiến lược quản lý tiến trình hợp lý.
+\end{itemize}
+
+Do đó, Selenium trong hệ thống này được sử dụng một cách có chọn lọc, tập trung vào các giai đoạn yêu cầu tương tác với nội dung động, thay vì áp dụng cho toàn bộ pipeline.
+
+\paragraph{Vai trò của Selenium trong kiến trúc tổng thể}
+Trong kiến trúc thu thập dữ liệu của \textbf{FoodChatbot}, Selenium đóng vai trò:
+\begin{itemize}
+    \item lớp tương tác frontend,
+    \item cầu nối giữa dữ liệu động và pipeline xử lý phía sau,
+    \item nền tảng để triển khai các kỹ thuật chống phát hiện bot.
+\end{itemize}
+
+Dữ liệu thu thập từ Selenium sau đó được chuyển sang các giai đoạn tiền xử lý, chuẩn hoá và nhúng vector để phục vụ hệ thống Retrieval-Augmented Generation.
+
+\subsection{Kỹ thuật Undetected WebDriver và chống phát hiện bot}
+\label{subsec:undetected}
+
+\paragraph{Bối cảnh và vấn đề}
+Các website hiện đại thường triển khai nhiều cơ chế nhằm phát hiện và ngăn chặn hành vi thu thập dữ liệu tự động (bot), đặc biệt là khi sử dụng Selenium WebDriver mặc định. Các cơ chế này có thể dựa trên:
+\begin{itemize}
+    \item đặc điểm trình duyệt (browser fingerprint),
+    \item hành vi người dùng bất thường,
+    \item tần suất truy cập cao,
+    \item hoặc các thuộc tính đặc thù của WebDriver.
+\end{itemize}
+
+Nếu không có biện pháp phòng tránh, crawler rất dễ bị:
+\begin{itemize}
+    \item chặn truy cập (HTTP 403),
+    \item hiển thị CAPTCHA,
+    \item hoặc trả về nội dung giả/thiếu dữ liệu.
+\end{itemize}
+
+\paragraph{Nguyên lý phát hiện Selenium của website}
+Trong thực tế, nhiều website sử dụng các kỹ thuật phổ biến để phát hiện Selenium, bao gồm:
+
+\begin{itemize}
+    \item Kiểm tra biến JavaScript \texttt{navigator.webdriver}.
+    \item Phân tích fingerprint trình duyệt (user-agent, canvas, WebGL, timezone).
+    \item So sánh hành vi người dùng (scroll, click, delay) với hành vi tự nhiên.
+    \item Phát hiện các đặc điểm đặc trưng của ChromeDriver mặc định.
+\end{itemize}
+
+Các dấu hiệu này đủ để phân biệt giữa người dùng thật và trình duyệt tự động.
+
+\paragraph{Undetected ChromeDriver}
+Để khắc phục vấn đề trên, hệ thống sử dụng \textbf{undetected ChromeDriver}, một biến thể của ChromeDriver được thiết kế nhằm:
+\begin{itemize}
+    \item che giấu các đặc trưng của WebDriver,
+    \item mô phỏng hành vi trình duyệt người dùng thật,
+    \item giảm khả năng bị phát hiện bởi các script anti-bot.
+\end{itemize}
+
+Undetected ChromeDriver hoạt động bằng cách:
+\begin{itemize}
+    \item vá (patch) các thuộc tính JavaScript nhạy cảm,
+    \item tuỳ chỉnh quá trình khởi tạo Chrome,
+    \item loại bỏ hoặc thay đổi các flag đặc trưng của automation.
+\end{itemize}
+
+\paragraph{Các kỹ thuật anti-detection được áp dụng}
+Trong hệ thống thu thập dữ liệu của \textbf{FoodChatbot}, các kỹ thuật sau được áp dụng kết hợp:
+
+\begin{itemize}
+    \item \textbf{Ẩn dấu hiệu WebDriver}:
     \begin{itemize}
-        \item Bỏ qua các trang đã thu thập.
-        \item Thử lại khi trình duyệt gặp lỗi.
-        \item Thời gian chờ ngẫu nhiên giữa 
-        các request để tránh bị chặn.
+        \item Vô hiệu hoá hoặc giả lập \texttt{navigator.webdriver}.
+        \item Điều chỉnh các thuộc tính trình duyệt mặc định.
+    \end{itemize}
+
+    \item \textbf{Giả lập User-Agent}:
+    \begin{itemize}
+        \item Sử dụng User-Agent hợp lệ của trình duyệt Chrome phổ biến.
+        \item Tránh các chuỗi User-Agent đặc trưng của automation.
+    \end{itemize}
+
+    \item \textbf{Hành vi người dùng giả lập}:
+    \begin{itemize}
+        \item Scroll trang theo từng bước nhỏ.
+        \item Thêm độ trễ ngẫu nhiên giữa các thao tác.
+        \item Tránh các hành vi truy cập liên tục không nghỉ.
+    \end{itemize}
+
+    \item \textbf{Quản lý tần suất truy cập}:
+    \begin{itemize}
+        \item Giới hạn số request trên mỗi phiên trình duyệt.
+        \item Phân tán truy cập theo thời gian.
     \end{itemize}
 \end{itemize}
 
-\subsubsection{Tối ưu hóa hiệu năng}
+\paragraph{Kết hợp với kiến trúc song song}
+Kỹ thuật undetected được thiết kế để tương thích với kiến trúc đa tiến trình và đa luồng của hệ thống:
 \begin{itemize}
-    \item Kết hợp đa tiến trình và đa luồng 
-    để tăng tốc độ xử lý.
-    \item Hỗ trợ tạm dừng từ URL hoặc trang cụ 
-    thể để không bị mất tiến trình.
-    \item Ghi nhật ký chi tiết để giám sát 
-    tiến trình và thống kê số link/công thức 
-    thu được.
-    \item Lưu dữ liệu theo từng trang/danh mục 
-    và sử dụng ghi file an toàn để giảm rủi ro 
-    mất dữ liệu.
+    \item Mỗi tiến trình có một instance WebDriver độc lập.
+    \item Tránh tái sử dụng fingerprint giữa các worker.
+    \item Giảm nguy cơ bị phát hiện do hành vi đồng loạt.
 \end{itemize}
+
+\paragraph{Đánh đổi và giới hạn}
+Mặc dù undetected WebDriver giúp tăng tỷ lệ thu thập thành công, vẫn tồn tại một số đánh đổi:
+\begin{itemize}
+    \item chi phí tài nguyên cao hơn (CPU, RAM),
+    \item thời gian thu thập dài hơn do cần delay ngẫu nhiên,
+    \item không thể đảm bảo tránh phát hiện 100\% nếu website nâng cấp cơ chế anti-bot.
+\end{itemize}
+
+Do đó, hệ thống được thiết kế theo hướng \emph{giảm thiểu rủi ro bị phát hiện} thay vì cố gắng vượt qua mọi cơ chế bảo vệ.
+
+\paragraph{Vai trò trong pipeline thu thập dữ liệu}
+Kỹ thuật undetected đóng vai trò then chốt trong pipeline thu thập dữ liệu:
+\begin{itemize}
+    \item đảm bảo dữ liệu thu thập đầy đủ và ổn định,
+    \item giảm tỷ lệ lỗi và gián đoạn tiến trình,
+    \item tạo nền tảng dữ liệu đáng tin cậy cho các bước tiền xử lý và xây dựng vector database phía sau.
+\end{itemize}
+
+
+\subsection{Chi tiết các giai đoạn thu thập dữ liệu}
+
+\subsection*{Giai đoạn 1: Thu thập danh mục món ăn}
+
+Mục tiêu của giai đoạn này là xây dựng danh sách đầy đủ các danh mục món ăn làm đầu vào cho các bước thu thập tiếp theo.
+
+\begin{itemize}
+    \item Selenium được sử dụng để tải trang chủ và các menu động.
+    \item Trình duyệt được cấu hình với:
+    \begin{itemize}
+        \item User-Agent ngẫu nhiên,
+        \item vô hiệu hoá các dấu hiệu tự động hoá (AutomationControlled),
+        \item mô phỏng kích thước màn hình và hành vi người dùng thật.
+    \end{itemize}
+    \item Tất cả các liên kết danh mục được trích xuất từ DOM sau khi trang tải hoàn tất.
+    \item Các liên kết không liên quan hoặc nằm trong danh sách cấm (blacklist) được loại bỏ.
+    \item Kết quả được lưu vào các file trung gian (temporary files) trong thư mục dữ liệu để phục vụ cho bước tiếp theo.
+\end{itemize}
+
+\subsection*{Giai đoạn 2: Thu thập liên kết công thức chi tiết}
+
+Giai đoạn này chịu trách nhiệm mở rộng từ danh mục sang các trang công thức cụ thể, với yêu cầu xử lý khối lượng lớn URL.
+
+\begin{itemize}
+    \item Mỗi danh mục được xử lý song song bằng cơ chế \textbf{đa tiến trình (multiprocessing)}.
+    \item Mỗi tiến trình Selenium độc lập với profile trình duyệt riêng nhằm:
+    \begin{itemize}
+        \item tránh chia sẻ trạng thái,
+        \item giảm nguy cơ bị phát hiện hành vi bất thường.
+    \end{itemize}
+    \item Hệ thống hỗ trợ \textbf{resume crawling}, cho phép:
+    \begin{itemize}
+        \item tiếp tục từ trang phân trang cuối cùng đã xử lý,
+        \item hoặc từ URL cuối cùng trước khi bị gián đoạn.
+    \end{itemize}
+    \item Tất cả liên kết công thức trên mỗi trang danh mục được trích xuất và chuẩn hoá.
+    \item Quá trình thu thập dừng khi:
+    \begin{itemize}
+        \item không còn trang mới,
+        \item hoặc số lỗi liên tiếp vượt quá ngưỡng cho phép.
+    \end{itemize}
+    \item Các liên kết được lưu theo từng danh mục hoặc từng trang để giảm thiểu rủi ro mất dữ liệu.
+\end{itemize}
+
+\subsection*{Giai đoạn 3: Thu thập chi tiết từng công thức}
+
+Đây là giai đoạn quan trọng nhất, nơi dữ liệu thô được trích xuất và chuẩn hoá thành cấu trúc dữ liệu phục vụ hệ RAG.
+
+\begin{itemize}
+    \item Mỗi URL công thức được xử lý bởi một worker riêng.
+    \item Hệ thống sử dụng \textbf{đa luồng (multithreading)} trong mỗi tiến trình để:
+    \begin{itemize}
+        \item tăng throughput,
+        \item tận dụng thời gian chờ I/O của Selenium.
+    \end{itemize}
+    \item Các thành phần dữ liệu được trích xuất bao gồm:
+    \begin{itemize}
+        \item mô tả tổng quan món ăn,
+        \item danh sách nguyên liệu,
+        \item các bước chế biến,
+        \item thời gian nấu,
+        \item thông tin dinh dưỡng (nếu có),
+        \item bình luận và đánh giá từ người dùng.
+    \end{itemize}
+    \item Dữ liệu được chuẩn hoá và lưu dưới dạng file \texttt{JSON}, với mỗi công thức là một file độc lập.
+\end{itemize}
+
+\paragraph{Cơ chế an toàn và chống phát hiện}
+Để đảm bảo quá trình thu thập ổn định và bền vững, hệ thống áp dụng nhiều biện pháp an toàn:
+
+\begin{itemize}
+    \item Bỏ qua các URL đã thu thập trước đó (duplicate check).
+    \item Tự động khởi động lại trình duyệt khi gặp lỗi không phục hồi.
+    \item Chèn thời gian chờ ngẫu nhiên giữa các thao tác.
+    \item Mô phỏng hành vi người dùng như cuộn trang và chờ tải nội dung.
+\end{itemize}
+
+\subsection*{Tối ưu hoá hiệu năng và độ tin cậy}
+
+\begin{itemize}
+    \item Kết hợp đa tiến trình (cho danh mục) và đa luồng (cho công thức).
+    \item Hỗ trợ tạm dừng và tiếp tục thu thập mà không mất tiến trình.
+    \item Ghi nhật ký chi tiết cho từng giai đoạn:
+    \begin{itemize}
+        \item số trang đã xử lý,
+        \item số công thức thu thập được,
+        \item lỗi phát sinh.
+    \end{itemize}
+    \item Sử dụng cơ chế ghi file an toàn (atomic write) để tránh dữ liệu bị hỏng khi hệ thống dừng đột ngột.
+\end{itemize}
+
+Toàn bộ dữ liệu sau khi thu thập được sử dụng làm đầu vào cho giai đoạn tiền xử lý, nhúng vector và xây dựng cơ sở dữ liệu phục vụ kiến trúc Retrieval-Augmented Generation.
+
 
 
 %-----------------------------------------------------------------------
@@ -1042,198 +1411,604 @@ cấu trúc JSON thống nhất, ví dụ:
 
 %=======================================================================
 \section{Vector Database: ChromaDB}
+\label{sec:chromadb}
 
-ChromaDB được sử dụng để lưu trữ dữ liệu với mỗi
-công thức có cấu trúc như sau:
+Trong kiến trúc Retrieval-Augmented Generation (RAG) của hệ thống 
+\textbf{FoodChatbot}, vector database đóng vai trò là 
+\textbf{bộ nhớ ngữ nghĩa ngoài (external semantic memory)}, chịu trách nhiệm 
+lưu trữ, tổ chức và truy xuất tri thức theo không gian vector. 
 
+Thay vì để mô hình sinh ngôn ngữ (LLM) dựa hoàn toàn vào tri thức nội tại, 
+ChromaDB cho phép hệ thống truy xuất các đoạn thông tin có liên quan một cách 
+có kiểm soát, từ đó cung cấp ngữ cảnh chính xác cho quá trình sinh câu trả lời 
+và giảm thiểu hiện tượng sinh thông tin sai lệch (hallucination).
+
+\subsection{Vai trò của ChromaDB trong hệ thống FoodChatbot}
+
+Trong hệ thống FoodChatbot, ChromaDB đảm nhiệm các vai trò chính sau:
 \begin{itemize}
-    \item ID duy nhất cho mỗi đoạn tài liệu.
-    \item Embedding của các đoạn tài liệu trong đó
-    vector được sinh từ mô hình nhúng từ mặc
-    định của ChromaDB \textbf{all-MiniLM-L6-v2},
-    mỗi vector có độ dài 384 chiều.
-    \item Nội dung văn bản (document) tóm tắt 
-    các trường chính.
-    \item Metadata như: nguồn, thời gian nấu, 
-    dinh dưỡng.
+    \item Lưu trữ embedding biểu diễn ngữ nghĩa của các công thức nấu ăn.
+    \item Thực hiện truy vấn tương đồng ngữ nghĩa (semantic similarity search).
+    \item Cung cấp ngữ cảnh đầu vào đáng tin cậy cho mô hình LLM.
+    \item Tách biệt hoàn toàn tri thức (data) khỏi mô hình sinh ngôn ngữ (model).
 \end{itemize}
 
-\subsection*{Cấu trúc lưu trữ trong ChromaDB}
+Nhờ kiến trúc này, việc cập nhật hoặc mở rộng tri thức chỉ yêu cầu cập nhật 
+dữ liệu trong ChromaDB mà không cần huấn luyện lại mô hình LLM.
+
+\subsection{Các thành phần kiến trúc chính của ChromaDB}
+
+ChromaDB được thiết kế theo kiến trúc \emph{dataflow-driven}, tối ưu cho luồng 
+xử lý dữ liệu từ văn bản sang vector và từ vector sang ngữ cảnh. Các thành phần 
+cốt lõi bao gồm:
+
+\begin{itemize}
+    \item \textbf{Embedding Layer}: chuyển đổi văn bản thành vector ngữ nghĩa.
+    \item \textbf{Vector Store}: lưu trữ các vector embedding.
+    \item \textbf{Indexing Engine (ANN)}: xây dựng chỉ mục phục vụ truy vấn nhanh.
+    \item \textbf{Metadata Store}: lưu trữ thông tin cấu trúc đi kèm mỗi vector.
+    \item \textbf{Query Engine}: điều phối toàn bộ quá trình truy vấn.
+\end{itemize}
+
+Các thành phần này được tách biệt rõ ràng nhằm đảm bảo khả năng mở rộng, 
+bảo trì và thay thế từng phần mà không ảnh hưởng toàn bộ hệ thống.
+
+\subsection{Mô hình embedding và không gian vector}
+
+Trong hệ thống, ChromaDB sử dụng mô hình nhúng từ:
+\[
+\texttt{all-MiniLM-L6-v2}
+\]
+
+Mô hình này có các đặc điểm:
+\begin{itemize}
+    \item Kiến trúc Transformer nhẹ, hiệu quả.
+    \item Vector đầu ra có kích thước cố định $d = 384$.
+    \item Tối ưu cho các tác vụ semantic search.
+\end{itemize}
+
+Với mỗi đoạn văn bản $x_i$, embedding được sinh:
+\[
+    d_i = \text{Embed}(x_i), \quad d_i \in \mathbb{R}^{384}
+\]
+
+Tất cả embedding của dữ liệu và truy vấn đều nằm trong cùng một không gian 
+vector, đảm bảo khả năng so sánh ngữ nghĩa.
+
+\subsection{Chiến lược chia tài liệu (Document Chunking Strategy)}
+\label{subsec:chunking_strategy}
+
+Trong hệ thống \textbf{FoodChatbot}, chiến lược chia tài liệu được thiết kế theo 
+nguyên tắc:
+\[
+\textbf{Mỗi món ăn tương ứng với đúng một document chunk}
+\]
+
+Tức là toàn bộ thông tin liên quan đến một công thức nấu ăn — bao gồm mô tả, 
+nguyên liệu, các bước chế biến, thời gian nấu và thông tin dinh dưỡng — được gộp 
+thành một đơn vị văn bản duy nhất trước khi đưa vào ChromaDB.
+
+\subsubsection{Cấu trúc nội dung của một chunk}
+
+Mỗi chunk đại diện cho một món ăn có cấu trúc văn bản chuẩn hoá như sau:
+\begin{itemize}
+    \item \textbf{Tên và mô tả món ăn}
+    \item \textbf{Danh sách nguyên liệu}
+    \item \textbf{Các bước chế biến}
+    \item \textbf{Thời gian chuẩn bị và nấu}
+    \item \textbf{Thông tin dinh dưỡng (nếu có)}
+\end{itemize}
+
+Nội dung này được nối lại thành một chuỗi văn bản liền mạch, đảm bảo giữ được 
+ngữ cảnh tổng thể của món ăn khi sinh embedding.
+
+\subsubsection{Lý do lựa chọn chiến lược một món ăn – một chunk}
+
+Việc không chia nhỏ công thức thành nhiều chunk con được đưa ra dựa trên các 
+cân nhắc sau:
+
+\begin{itemize}
+    \item \textbf{Tính toàn vẹn ngữ nghĩa}:  
+    Một công thức nấu ăn là một đơn vị tri thức hoàn chỉnh. Việc chia nhỏ có thể 
+    làm mất mối liên hệ giữa nguyên liệu và các bước chế biến.
+    
+    \item \textbf{Đặc thù truy vấn của người dùng}:  
+    Người dùng thường đặt câu hỏi xoay quanh \emph{toàn bộ món ăn} 
+    (ví dụ: “cách nấu”, “nguyên liệu”, “thời gian nấu”), thay vì từng phần nhỏ 
+    riêng lẻ.
+    
+    \item \textbf{Giảm độ phức tạp hệ thống}:  
+    Chiến lược này đơn giản hoá việc quản lý ID, metadata và ánh xạ ngược từ 
+    vector sang dữ liệu gốc.
+    
+    \item \textbf{Độ dài văn bản phù hợp}:  
+    Độ dài trung bình của một công thức nằm trong giới hạn mà mô hình embedding 
+    \texttt{all-MiniLM-L6-v2} có thể xử lý hiệu quả mà không làm suy giảm chất 
+    lượng biểu diễn.
+\end{itemize}
+
+\subsubsection{Ảnh hưởng đến không gian vector}
+
+Với chiến lược này, mỗi vector embedding:
+\[
+    d_i = \text{Embed}(x_i)
+\]
+biểu diễn \textbf{ngữ nghĩa tổng hợp của toàn bộ món ăn}, thay vì một thành phần 
+cục bộ.
+
+Điều này khiến truy vấn trong không gian vector mang tính:
+\begin{itemize}
+    \item tổng quát hơn,
+    \item phù hợp với các câu hỏi tự nhiên của người dùng,
+    \item ưu tiên truy xuất đúng món ăn thay vì từng đoạn nhỏ rời rạc.
+\end{itemize}
+
+\subsubsection{Tác động đến pipeline truy vấn}
+
+Trong pha truy vấn, ChromaDB trả về top-$k$ món ăn có embedding gần nhất với 
+truy vấn người dùng. Mỗi kết quả trả về tương ứng với:
+\begin{itemize}
+    \item một công thức hoàn chỉnh,
+    \item đầy đủ thông tin để cung cấp ngữ cảnh cho mô hình LLM,
+    \item không cần bước hợp nhất nhiều chunk con.
+\end{itemize}
+
+Thiết kế này giúp giảm độ phức tạp hậu xử lý và đảm bảo tính nhất quán của ngữ 
+cảnh đầu vào cho mô hình sinh ngôn ngữ.
+
+\subsubsection{Giới hạn của chiến lược}
+
+Chiến lược một chunk cho mỗi món ăn cũng có một số giới hạn nhất định:
+\begin{itemize}
+    \item Độ chi tiết truy xuất thấp hơn so với chia nhỏ theo bước nấu.
+    \item Không phù hợp cho các truy vấn cực kỳ cụ thể (ví dụ: chỉ hỏi một bước 
+    chế biến).
+\end{itemize}
+
+Tuy nhiên, trong phạm vi mục tiêu của hệ thống FoodChatbot, các giới hạn này là 
+chấp nhận được và được đánh đổi để lấy tính đơn giản và ổn định của hệ thống.
+
+
+\subsection{Kiến trúc hoạt động chi tiết của ChromaDB}
+\label{subsec:chromadb_architecture}
+
+Toàn bộ vòng đời dữ liệu trong ChromaDB được chia thành hai pha chính:
+\begin{itemize}
+    \item \textbf{Pha xây dựng dữ liệu (Ingestion / Indexing Time)}
+    \item \textbf{Pha truy vấn (Query Time)}
+\end{itemize}
+
+Hai pha này sử dụng chung hạ tầng lưu trữ và chỉ mục, nhưng có luồng xử lý và 
+mục tiêu tối ưu khác nhau.
+
+\subsubsection{Pha 1: Ingestion Pipeline}
+
+\paragraph{Bước 1: Nhận dữ liệu văn bản}
+Dữ liệu đầu vào là các document chunk đã được tiền xử lý và chuẩn hoá.
+
+\paragraph{Bước 2: Sinh embedding}
+Mỗi chunk $x_i$ được ánh xạ sang vector:
+\[
+    d_i = \text{Embed}(x_i)
+\]
+
+\paragraph{Bước 3: Gán định danh và metadata}
+Mỗi embedding được gán một ID duy nhất, liên kết với document gốc và metadata.
+
+\paragraph{Bước 4: Lưu trữ và lập chỉ mục}
+Embedding được đưa vào vector store và indexing engine để xây dựng chỉ mục ANN. 
+ChromaDB hỗ trợ cập nhật incremental, không cần tái xây dựng toàn bộ chỉ mục.
+
+\subsubsection{Pha 2: Query Pipeline}
+
+\paragraph{Bước 1: Sinh embedding truy vấn}
+\[
+    q = \text{Embed}(q_{\text{text}})
+\]
+
+\paragraph{Bước 2: Truy vấn ANN}
+Indexing engine tìm top-$k$ vector gần nhất với $q$:
+\[
+    \{d_{i_1}, d_{i_2}, \ldots, d_{i_k}\}
+\]
+
+\paragraph{Bước 3: Tính độ tương đồng}
+Độ tương đồng được tính bằng cosine similarity:
+\[
+    \text{sim}(q, d_i) = \frac{q \cdot d_i}{\|q\| \|d_i\|}
+\]
+
+\paragraph{Bước 4: Ánh xạ ngược sang document}
+Các vector top-$k$ được ánh xạ ngược sang document và metadata tương ứng. 
+Tại đây, vector chỉ đóng vai trò \textbf{chỉ mục ngữ nghĩa}, còn nội dung thực 
+tế được lấy từ document store.
+
+\subsection{Cấu trúc dữ liệu trong ChromaDB}
+
 \begin{verbatim}
 {
     "id": "recipe_001_chunk_01",
     "embedding": [...],
-    "document": "Summary: ... | Ingredients: ... | Instructions: ... | Prep: ...min, Cook: ...min",
+    "document": "Summary: ... | Ingredients: ... |
+                 Instructions: ... | Prep: ...min",
     "metadata": {
         "url": "...",
+        "recipe_name": "...",
         "prep_time": 0,
         "cook_time": 0,
         "servings": 0,
         "nutr_val_{nutrient}": 0,
         "nutr_unit_{nutrient}": "...",
+        "source": "..."
     }
 }
 \end{verbatim}
 
+Metadata cho phép kết hợp truy vấn vector với truy vấn có điều kiện.
+
+\subsection{Ý nghĩa kiến trúc đối với hệ thống FoodChatbot}
+
+Nhờ kiến trúc trên, ChromaDB:
+\begin{itemize}
+    \item đóng vai trò bộ nhớ ngữ nghĩa ngoài cho LLM,
+    \item cung cấp tri thức chính xác, có kiểm soát,
+    \item đảm bảo tính linh hoạt và độ tin cậy của hệ thống RAG.
+\end{itemize}
+
+\section{Mở rộng truy vấn RAG cho dữ liệu định lượng và ràng buộc số liệu}
+\label{subsec:rag_structured_retrieval}
+
+Mặc dù truy vấn ngữ nghĩa dựa trên embedding mang lại khả năng tìm kiếm linh hoạt 
+và gần với cách con người diễn đạt, phương pháp này vẫn tồn tại những hạn chế 
+nghiêm trọng trong các trường hợp truy vấn có chứa \textbf{ràng buộc định lượng 
+chính xác}. Đặc biệt trong lĩnh vực ẩm thực và dinh dưỡng, người dùng thường 
+đưa ra các yêu cầu dưới dạng số liệu cụ thể như lượng calo, hàm lượng protein, 
+chất béo hoặc thời gian nấu.
+
+Trong các tình huống này, việc chỉ dựa vào độ tương đồng cosine giữa embedding 
+truy vấn và embedding tài liệu là \textbf{không đủ} để đảm bảo tính chính xác 
+của kết quả truy xuất.
+
+\subsubsection{Hạn chế của truy vấn thuần ngữ nghĩa}
+
+Embedding ngữ nghĩa có đặc điểm:
+\begin{itemize}
+    \item mã hoá ý nghĩa tổng quát của văn bản,
+    \item không đảm bảo bảo toàn quan hệ thứ tự hay bất đẳng thức số học,
+    \item không phù hợp để so sánh chính xác các giá trị định lượng.
+\end{itemize}
+
+Ví dụ, hai công thức có mô tả ngữ nghĩa rất giống nhau nhưng:
+\begin{itemize}
+    \item một món có 350 kcal,
+    \item món còn lại có 700 kcal,
+\end{itemize}
+vẫn có thể nằm gần nhau trong không gian vector. Điều này dẫn đến việc hệ thống 
+có thể trả về kết quả \emph{ngữ nghĩa đúng} nhưng \emph{số liệu sai} so với yêu 
+cầu người dùng.
+
+\subsubsection{Nhu cầu truy vấn lai: ngữ nghĩa + cấu trúc}
+
+Để khắc phục hạn chế trên, hệ thống FoodChatbot được thiết kế theo hướng 
+\textbf{truy vấn lai (hybrid retrieval)}, kết hợp:
+\begin{itemize}
+    \item truy vấn ngữ nghĩa trên không gian embedding,
+    \item truy vấn có điều kiện trên metadata dạng số.
+\end{itemize}
+
+Trong kiến trúc này, truy vấn người dùng được phân tách thành hai thành phần:
+\begin{itemize}
+    \item phần biểu diễn ý định và chủ đề (semantic intent),
+    \item phần ràng buộc định lượng và điều kiện lọc (structured constraints).
+\end{itemize}
+
+\subsubsection{Vai trò của LLM trong trích xuất truy vấn có cấu trúc}
+
+Mô hình ngôn ngữ lớn (LLM) được sử dụng như một tầng phân tích trung gian, có nhiệm vụ:
+\begin{itemize}
+    \item hiểu truy vấn tự nhiên của người dùng,
+    \item phát hiện các điều kiện mang tính định lượng,
+    \item chuyển đổi các điều kiện này thành biểu diễn truy vấn có cấu trúc.
+\end{itemize}
+
+Thay vì để LLM trả lời trực tiếp, hệ thống yêu cầu LLM sinh ra một biểu diễn 
+truy vấn trung gian, phản ánh đầy đủ:
+\begin{itemize}
+    \item nội dung cần tìm kiếm về mặt ngữ nghĩa,
+    \item các ràng buộc số liệu cần được thoả mãn tuyệt đối.
+\end{itemize}
+
+Biểu diễn trung gian này được thiết kế để có thể ánh xạ trực tiếp sang các tham 
+số truy vấn của ChromaDB.
+
+\subsubsection{Tương tác giữa LLM và ChromaDB trong truy vấn lai}
+
+Trong pipeline truy vấn mở rộng, luồng xử lý được thực hiện như sau:
+\begin{enumerate}
+    \item LLM phân tích truy vấn và tách các yêu cầu ngữ nghĩa khỏi các điều kiện 
+    định lượng.
+    \item Phần ngữ nghĩa được dùng để sinh embedding truy vấn.
+    \item Phần điều kiện định lượng được ánh xạ sang các tham số lọc metadata 
+    của ChromaDB.
+    \item ChromaDB thực hiện tìm kiếm cosine similarity trên tập dữ liệu đã được 
+    lọc theo các điều kiện số liệu.
+\end{enumerate}
+
+Cách tiếp cận này đảm bảo rằng:
+\begin{itemize}
+    \item mọi kết quả trả về đều thoả mãn các ràng buộc số học,
+    \item việc xếp hạng kết quả vẫn dựa trên mức độ tương đồng ngữ nghĩa.
+\end{itemize}
+
+\subsubsection{Lợi ích kiến trúc của cách tiếp cận}
+
+Việc sử dụng LLM để trích xuất truy vấn có cấu trúc mang lại nhiều lợi ích quan trọng:
+\begin{itemize}
+    \item \textbf{Tính chính xác}: các điều kiện số liệu được xử lý bằng so sánh 
+    logic thay vì suy diễn ngữ nghĩa.
+    \item \textbf{Tính linh hoạt}: người dùng không cần học cú pháp truy vấn cứng.
+    \item \textbf{Khả năng mở rộng}: dễ dàng bổ sung thêm các loại ràng buộc mới 
+    trong tương lai.
+    \item \textbf{Tách biệt trách nhiệm}: LLM chỉ đảm nhiệm hiểu ngôn ngữ, trong khi 
+    ChromaDB chịu trách nhiệm truy vấn dữ liệu.
+\end{itemize}
+
+\subsubsection{Ý nghĩa đối với hệ thống FoodChatbot}
+
+Trong bối cảnh FoodChatbot, cơ chế truy vấn lai giúp hệ thống:
+\begin{itemize}
+    \item đáp ứng chính xác các yêu cầu dinh dưỡng cá nhân hoá,
+    \item tránh các câu trả lời sai lệch do embedding không phản ánh đúng số liệu,
+    \item nâng cao độ tin cậy khi sử dụng trong các kịch bản liên quan đến sức khoẻ.
+\end{itemize}
+
+Cách thiết kế này cho phép hệ thống kết hợp ưu điểm của truy vấn ngữ nghĩa và 
+truy vấn cấu trúc, tạo thành một pipeline Retrieval-Augmented Generation vừa 
+linh hoạt về ngôn ngữ, vừa chặt chẽ về mặt dữ liệu.
+
+
+
 %=======================================================================
-\section{Retrieval-Augmented Generation (RAG)}
+\section{Chi tiết từng giai đoạn trong pipeline RAG}
+\label{subsec:rag_detailed_analysis}
 
-\subsection{Thành phần chính}
+Quy trình Retrieval-Augmented Generation trong FoodChatbot được thiết kế theo 
+mô hình pipeline tuyến tính, trong đó mỗi bước đảm nhiệm một vai trò cụ thể 
+và có thể kiểm soát được. Việc giữ nguyên thứ tự và chức năng của từng bước 
+giúp hệ thống ổn định, dễ mở rộng và dễ phân tích lỗi.
 
+\paragraph{Giai đoạn 1: Tiếp nhận và chuẩn hoá truy vấn đa ngôn ngữ}
+
+Việc tiếp nhận truy vấn $Q$ ở dạng đa ngôn ngữ phản ánh kịch bản sử dụng thực tế 
+của người dùng. Tuy nhiên, để đảm bảo tính nhất quán trong không gian embedding 
+và trong dữ liệu lưu trữ, truy vấn cần được chuẩn hoá về một ngôn ngữ chung 
+(trong hệ thống này là tiếng Anh).
+
+Mô hình Gemini được sử dụng ở giai đoạn này không nhằm sinh câu trả lời, mà 
+đóng vai trò:
 \begin{itemize}
-    \item \textbf{Embedding Generator:} tạo 
-    vector cho truy vấn và tài liệu.
-    \item \textbf{Retriever (ChromaDB):} tìm 
-    kiếm cosine similarity.
-    \item \textbf{Context Injection:} đưa các 
-    đoạn liên quan vào prompt.
-    \item \textbf{LLM (Gemini):} ghi nhận, phân tích
-    yêu cầu người dùng và sinh phản hồi có ngữ cảnh
-    (Đầu - Cuối).
+    \item nhận diện ngôn ngữ đầu vào,
+    \item dịch chính xác về ngôn ngữ chuẩn,
+    \item giữ nguyên ý nghĩa ngữ cảnh của truy vấn.
 \end{itemize}
 
-\subsection{Quy trình RAG chi tiết}
+Điều này giúp tránh việc embedding các truy vấn cùng ý nghĩa nhưng khác ngôn ngữ 
+vào các vùng vector khác nhau.
 
-\begin{enumerate}
-    \item Nhận truy vấn đầu vào (đa ngôn ngữ) $Q$.
-    \item Chuẩn hoá truy vấn bằng Gemini (dịch 
-    sang tiếng Anh nếu cần).
-    \[
-        Q' = \text{Normalize}(Q)
-    \]
-    \item Lọc ra những từ khoá quan trọng thể hiện
-    sở thích, nguyên liệu, yêu cầu dinh dưỡng hoặc
-    lưu ý về tình trạng sức khỏe.
-    \[
-        S = \text{Translate}(\text{ExtractPreferences}(Q'))
-    \]
-    \item Trích xuất các từ khóa lọc thông số dinh dưỡng
-    nâng cao (nếu có) từ truy vấn.
-    \[
-        F = \text{ExtractFilters}(Q')
-    \]
-    \item Sinh embedding truy vấn.
-    \[
-        V = \text{Embed}(Q')
-    \]
-    \item Thực hiện tìm kiếm ngữ nghĩa trong ChromaDB để
-    chọn top-$k$ đoạn liên quan nhất sắp xếp
-    \[
-        D = \text{Retrieve}(V, F, k)
-    \]
-    theo độ tương đồng từ cao đến thấp.
-    \item Ghép prompt 
-    (ngữ cảnh + truy vấn người dùng).
-    \[
-        P = \text{ConstructPrompt}(D, Q')
-    \]
-    \item LLM sinh phản hồi theo tiếng Anh.
-    \[
-        A = \text{Gemini.generate}(P, S)
-    \]
-    \item Nếu ngôn ngữ đầu vào không phải 
-    tiếng Anh, dịch phản hồi về ngôn ngữ gốc.
-    \[
-        A' = \text{Translate}(A, \text{lang}(Q))
-    \]
-    \item Gửi kết quả + nguồn trích dẫn về frontend.
-\end{enumerate}
+\paragraph{Giai đoạn 2: Trích xuất sở thích và ngữ cảnh người dùng}
 
-%=======================================================================
-\subsection{Triển khai Backend}
-
-Hệ thống backend của FoodChatbot được xây dựng 
-bằng Flask, đóng vai trò cầu nối giữa giao diện 
-web và pipeline xử lý RAG. Thành phần này chịu 
-trách nhiệm phục vụ giao diện người dùng, tiếp 
-nhận yêu cầu chat, quản lý phiên hội thoại và 
-chuyển tiếp truy vấn đến mô hình chatbot.
-
-\subsubsection{Thành phần chính}
-
+Tập $S$ đại diện cho các yếu tố mang tính định hướng trả lời, bao gồm:
 \begin{itemize}
-    \item \textbf{Web Server}: cung cấp giao diện 
-    chat và các tệp tĩnh như HTML, CSS, JavaScript.
-    \item \textbf{REST API}: xử lý các yêu cầu 
-    từ frontend bao gồm gửi tin nhắn, reset hội 
-    thoại và tải asset.
-    \item \textbf{Session Manager}: duy trì ngữ 
-    cảnh hội thoại riêng cho từng người dùng 
-    thông qua session của Flask.
+    \item khẩu vị,
+    \item nguyên liệu ưa thích hoặc cần tránh,
+    \item yêu cầu dinh dưỡng hoặc tình trạng sức khoẻ.
 \end{itemize}
 
-\subsubsection{Các API quan trọng}
-
+Các thông tin này không được dùng trực tiếp cho truy vấn vector database, mà 
+được sử dụng ở giai đoạn sinh câu trả lời để:
 \begin{itemize}
-    \item \textbf{GET /} \\
-          Trả về trang giao diện chính của 
-          chatbot (\texttt{index.html}), là điểm 
-          vào của ứng dụng web.
-
-    \item \textbf{GET /home/<filename>} \\
-          Trả về các tệp CSS, JavaScript và các 
-          tài nguyên tĩnh cần thiết cho frontend.
-
-    \item \textbf{POST /api/chat} \\
-          Nhận tin nhắn từ người dùng, kích hoạt 
-          pipeline xử lý của chatbot và trả về 
-          phản hồi dạng JSON.
-
-    \item \textbf{POST /api/reset} \\
-          Xóa toàn bộ lịch sử hội thoại trong 
-          session, giúp người dùng bắt đầu cuộc 
-          trò chuyện mới.
+    \item cá nhân hoá phản hồi,
+    \item điều chỉnh cách diễn đạt của LLM,
+    \item bổ sung các lưu ý phù hợp cho người dùng.
 \end{itemize}
 
-\subsubsection{Luồng xử lý của \texttt{/api/chat}}
+Việc tách riêng $S$ giúp hệ thống không làm nhiễu không gian truy vấn embedding.
 
-Khi người dùng gửi yêu cầu POST chứa tin nhắn, 
-backend thực hiện quy trình sau:
+\paragraph{Giai đoạn 3: Trích xuất bộ lọc thông số dinh dưỡng}
 
-\begin{enumerate}
-    \item Backend nhận payload JSON và lấy nội 
-    dung truy vấn.
-    \item Truy vấn được chuyển đến chatbot để 
-    xử lý.
-    \item Bên trong chatbot, pipeline xử lý RAG 
-    được thực thi.
-    \item Backend tách phần phản hồi và danh 
-    sách nguồn tham chiếu (nếu có).
-    \item Trả về kết quả dưới dạng JSON: 
-    \[
-        \{\text{response},\ \text{sources}\}.
-    \]
-\end{enumerate}
+Tập $F$ chứa các ràng buộc mang tính định lượng, ví dụ như giới hạn calo, chất béo 
+hoặc thời gian nấu. Đây là bước then chốt để chuyển từ truy vấn ngữ nghĩa thuần 
+sang truy vấn lai.
 
-\subsubsection{Luồng xử lý của \texttt{/api/reset}}
-
-\begin{enumerate}
-    \item Backend nhận yêu cầu POST từ frontend.
-    \item Gọi chức năng reset trong chatbot 
-    để xóa toàn bộ lịch sử hội thoại.
-    \item Trả về JSON thông báo việc đặt lại 
-    hội thoại thành công.
-\end{enumerate}
-
-\subsection{Triển khai Frontend}
-Giao diện người dùng của FoodChatbot được xây dựng 
-bằng HTML, CSS và JavaScript, cung cấp trải nghiệm 
-trò chuyện trực quan và thân thiện. Người dùng có thể
-gửi câu hỏi, nhận phản hồi và xem nguồn tham chiếu
-một cách dễ dàng.
-
-Giao diện chính gồm:
+Các ràng buộc này được:
 \begin{itemize}
-    \item \textbf{Thanh tiêu đề}: hiển thị tên 
-    chatbot và logo.
-    \item \textbf{Khu vực hiển thị hội thoại}: 
-    nơi các tin nhắn từ người dùng và chatbot 
-    được trình bày theo dạng bong bóng chat.
-    \item \textbf{Thanh nhập tin nhắn}: cho phép 
-    người dùng nhập câu hỏi và gửi đi.
-    \item \textbf{Nút reset}: để xóa lịch sử 
-    hội thoại và bắt đầu cuộc trò chuyện mới.
+    \item trích xuất bởi Gemini,
+    \item chuẩn hoá về dạng điều kiện logic,
+    \item ánh xạ trực tiếp sang metadata trong ChromaDB.
 \end{itemize}
+
+Việc xử lý các ràng buộc số liệu bên ngoài không gian embedding giúp đảm bảo 
+tính chính xác tuyệt đối của kết quả truy xuất.
+
+\paragraph{Giai đoạn 4: Sinh embedding truy vấn}
+
+Vector $V$ được sinh từ truy vấn đã chuẩn hoá $Q'$ đại diện cho ý định ngữ nghĩa 
+tổng quát của người dùng. Embedding này:
+\begin{itemize}
+    \item không chứa thông tin số liệu cụ thể,
+    \item được dùng để so sánh cosine similarity,
+    \item quyết định thứ tự xếp hạng kết quả.
+\end{itemize}
+
+Cách tiếp cận này giúp hệ thống ưu tiên đúng chủ đề, trong khi vẫn giữ được 
+khả năng lọc chính xác theo điều kiện.
+
+\paragraph{Giai đoạn 5: Truy vấn ChromaDB theo cơ chế lai}
+
+Bước truy vấn $D = \text{Retrieve}(V, F, k)$ được thực hiện theo hai tầng:
+\begin{itemize}
+    \item lọc dữ liệu dựa trên metadata theo $F$,
+    \item xếp hạng ngữ nghĩa dựa trên cosine similarity giữa $V$ và embedding 
+    tài liệu.
+\end{itemize}
+
+Thiết kế này giúp:
+\begin{itemize}
+    \item giảm không gian tìm kiếm,
+    \item tăng độ chính xác của kết quả,
+    \item đảm bảo mọi tài liệu trả về đều thoả mãn các ràng buộc số liệu.
+\end{itemize}
+
+\paragraph{Giai đoạn 6: Ghép ngữ cảnh và xây dựng prompt}
+
+Tập tài liệu $D$ được ghép thành ngữ cảnh có cấu trúc trước khi đưa vào prompt. 
+Đây là bước quan trọng nhằm:
+\begin{itemize}
+    \item cung cấp tri thức có kiểm soát cho LLM,
+    \item hạn chế hiện tượng hallucination,
+    \item đảm bảo phản hồi dựa trên dữ liệu thực.
+\end{itemize}
+
+Prompt được xây dựng theo hướng tách bạch giữa hướng dẫn hệ thống, ngữ cảnh 
+truy xuất và câu hỏi người dùng.
+
+\paragraph{Giai đoạn 7: Sinh phản hồi và hậu xử lý}
+
+Ở bước này, Gemini thực hiện sinh phản hồi dựa trên:
+\begin{itemize}
+    \item ngữ cảnh đã truy xuất,
+    \item sở thích người dùng $S$,
+    \item hướng dẫn hội thoại của hệ thống.
+\end{itemize}
+
+Việc dịch ngược phản hồi về ngôn ngữ gốc của người dùng đảm bảo trải nghiệm 
+tự nhiên, trong khi vẫn giữ được tính nhất quán của pipeline nội bộ.
+
+\subsubsection{Nhận xét tổng quát về kiến trúc pipeline}
+
+Pipeline RAG của FoodChatbot có các đặc điểm nổi bật:
+\begin{itemize}
+    \item Luồng xử lý rõ ràng, không vòng lặp ngầm.
+    \item LLM được sử dụng như bộ phân tích và sinh ngôn ngữ, không can thiệp 
+    trực tiếp vào truy vấn dữ liệu.
+    \item Truy vấn ngữ nghĩa và truy vấn định lượng được xử lý ở hai không gian 
+    riêng biệt nhưng phối hợp chặt chẽ.
+\end{itemize}
+
+Thiết kế này giúp hệ thống vừa linh hoạt về ngôn ngữ, vừa đảm bảo tính chính xác 
+và khả năng kiểm soát trong các kịch bản thực tế.
+
+
+\section{Kiến trúc tổng thể Backend -- Frontend}
+\label{subsec:system_architecture}
+
+Hệ thống FoodChatbot được triển khai theo mô hình kiến trúc client--server, 
+trong đó backend và frontend được tách biệt rõ ràng về trách nhiệm. 
+Cách tiếp cận này giúp hệ thống dễ bảo trì, dễ mở rộng và phù hợp với 
+các kịch bản triển khai thực tế.
+
+\begin{itemize}
+    \item \textbf{Frontend} đảm nhiệm toàn bộ giao diện người dùng và tương tác.
+    \item \textbf{Backend} đóng vai trò trung gian, xử lý logic nghiệp vụ và 
+    điều phối pipeline RAG.
+    \item \textbf{Chatbot Core} chịu trách nhiệm hiểu truy vấn, truy xuất tri thức 
+    và sinh phản hồi.
+\end{itemize}
+
+Luồng dữ liệu được thiết kế theo hướng một chiều, từ người dùng đến backend, 
+sau đó đi vào pipeline xử lý và trả kết quả ngược lại, giúp giảm độ phức tạp 
+và tránh các trạng thái không nhất quán.
+
+\subsection{Thiết kế Backend dựa trên Flask}
+\label{subsec:backend_design}
+
+Flask được lựa chọn làm nền tảng backend do các đặc điểm:
+\begin{itemize}
+    \item nhẹ, dễ triển khai và phù hợp với ứng dụng AI quy mô vừa,
+    \item hỗ trợ tốt REST API,
+    \item dễ tích hợp với các module Python xử lý NLP và RAG.
+\end{itemize}
+
+Backend không thực hiện bất kỳ xử lý ngôn ngữ hoặc truy vấn tri thức phức tạp nào 
+một cách trực tiếp, mà chỉ đóng vai trò \emph{orchestrator} cho pipeline chatbot.
+
+\subsubsection{Tách biệt tầng Web Server và Chatbot Logic}
+
+Trong kiến trúc hiện tại:
+\begin{itemize}
+    \item Flask chịu trách nhiệm tiếp nhận request và trả response.
+    \item Lớp \texttt{Chatbot} chịu trách nhiệm toàn bộ logic xử lý RAG.
+\end{itemize}
+
+Sự phân tách này đảm bảo:
+\begin{itemize}
+    \item backend có thể thay thế hoặc mở rộng mà không ảnh hưởng đến chatbot,
+    \item chatbot có thể tái sử dụng trong các giao diện khác (CLI, mobile app).
+\end{itemize}
+
+\subsection{Quản lý hội thoại và ngữ cảnh}
+\label{subsec:conversation_management}
+
+Mỗi phiên trò chuyện của người dùng được quản lý thông qua session của Flask. 
+Cơ chế này cho phép:
+\begin{itemize}
+    \item duy trì lịch sử hội thoại,
+    \item giữ ngữ cảnh xuyên suốt nhiều lượt hỏi--đáp,
+    \item hỗ trợ reset hội thoại khi cần.
+\end{itemize}
+
+Việc quản lý ngữ cảnh ở tầng backend giúp LLM không cần lưu trạng thái dài hạn, 
+giảm chi phí tính toán và tăng khả năng kiểm soát.
+
+\subsection{Thiết kế API và giao tiếp Frontend}
+\label{subsec:api_design}
+
+Các API được thiết kế theo phong cách RESTful, sử dụng JSON làm định dạng trao đổi dữ liệu. 
+Thiết kế này mang lại:
+\begin{itemize}
+    \item tính đơn giản,
+    \item khả năng mở rộng sang các client khác,
+    \item dễ dàng kiểm thử và debug.
+\end{itemize}
+
+Đặc biệt, endpoint \texttt{/api/chat} được thiết kế như một điểm vào duy nhất 
+(single entry point) cho toàn bộ pipeline xử lý chatbot, giúp đơn giản hoá 
+frontend và tập trung logic xử lý ở backend.
+
+\subsection{Thiết kế Frontend và trải nghiệm người dùng}
+\label{subsec:frontend_design}
+
+Giao diện frontend được xây dựng theo hướng tối giản nhưng trực quan, 
+phù hợp với mô hình chatbot hội thoại.
+
+Các quyết định thiết kế chính bao gồm:
+\begin{itemize}
+    \item hiển thị hội thoại theo dạng bong bóng để phân biệt người dùng và chatbot,
+    \item hỗ trợ đa ngôn ngữ ngay từ đầu vào,
+    \item hiển thị nguồn tham chiếu để tăng độ tin cậy của câu trả lời.
+\end{itemize}
+
+Việc bổ sung chức năng reset hội thoại giúp người dùng dễ dàng bắt đầu 
+một phiên làm việc mới mà không bị ảnh hưởng bởi ngữ cảnh cũ.
+
+\subsection{Đánh giá kiến trúc triển khai}
+\label{subsec:deployment_evaluation}
+
+Kiến trúc triển khai hiện tại đáp ứng tốt các yêu cầu của hệ thống FoodChatbot:
+\begin{itemize}
+    \item dễ triển khai trên môi trường local và server,
+    \item phù hợp cho thử nghiệm và mở rộng,
+    \item đủ linh hoạt để tích hợp thêm các mô hình hoặc dịch vụ bên ngoài.
+\end{itemize}
+
+Tuy nhiên, trong các kịch bản mở rộng quy mô lớn, hệ thống có thể được cải tiến 
+bằng cách:
+\begin{itemize}
+    \item tách backend thành các service độc lập,
+    \item bổ sung cơ chế xác thực và phân quyền,
+    \item triển khai caching cho các truy vấn phổ biến.
+\end{itemize}
+
 
 \begin{figure}[!h]
     \centering

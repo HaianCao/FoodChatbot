@@ -67,7 +67,7 @@ class GeminiClient:
             ... )
         """
         self.config = types.GenerateContentConfig(
-            system_instruction=system_instruction,
+            system_instruction=system_instruction
         )
         self.client = genai.Client(api_key=api_key)
         self.chat_session = None  # Will be created when starting chat
